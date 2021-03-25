@@ -593,11 +593,10 @@ void gpu_replace_medoids_kernel(int *d_M_current, int *d_M_random, int *d_M, int
         }
     }
 
-    int old_count = j;
     int p = 0;
     while (j < k) {
         bool is_in = false;
-        for (int i = 0; i < old_count; i++) {
+        for (int i = 0; i < j; i++) {
             if (d_M[d_M_random[p]] == d_M_current[i]) {
                 is_in = true;
                 break;
@@ -981,7 +980,7 @@ void gpu_compute_L_keep(int *d_L, int *d_L_sizes_change, int *d_L_sizes, int *d_
                                                            d_delta, d_delta_old,
                                                            n);
 
-    cudaMemcpy(d_delta_old, d_delta, k*sizeof(float), cudaMemcpyDeviceToDevice);
+    cudaMemcpy(d_delta_old, d_delta, k * sizeof(float), cudaMemcpyDeviceToDevice);
 }
 
 
@@ -1078,8 +1077,8 @@ void gpu_replace_medoids_kernel_Keep(int *d_M_bad, int *d_num_bad, int *d_M_curr
             d_M_bad[l] = i;
             l++;
 
-            bool is_in;
-            do {
+            bool is_in = true;
+            while (is_in) {
                 is_in = false;
                 for (int q = 0; q < j; q++) {
                     if (d_M[d_M_random[p]] == s_M_kept[q]) {
@@ -1088,7 +1087,7 @@ void gpu_replace_medoids_kernel_Keep(int *d_M_bad, int *d_num_bad, int *d_M_curr
                         break;
                     }
                 }
-            } while (is_in);
+            }
             d_M_current[i] = d_M[d_M_random[p]];
             s_M_kept[j] = d_M[d_M_random[p]];
             j++;
@@ -1111,6 +1110,7 @@ void gpu_replace_medoids_kernel_keep_reset(int *d_L_sizes, float *d_delta_old, f
 
 std::vector <at::Tensor>
 GPU_PROCLUS_KEEP(at::Tensor data, int k, int l, float a, float b, float min_deviation, int termination_rounds) {
+    //todo there might be an error is this!!!! it often use more iterations then the other version - which is should not!!!
     cudaDeviceSynchronize();
 //    cudaProfilerStart();
 
@@ -1570,11 +1570,10 @@ gpu_replace_medoids_kernel_pre(int *d_M_idx, int *d_M_idx_best, int *d_M_current
         }
     }
 
-    int old_count = j;
     int p = 0;
     while (j < k) {
         bool is_in = false;
-        for (int i = 0; i < old_count; i++) {
+        for (int i = 0; i < j; i++) {
             if (d_M[d_M_random[p]] == d_M_current[i]) {
                 is_in = true;
                 break;
