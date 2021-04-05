@@ -14,6 +14,8 @@ void print_array_gpu(float *d_X, int n);
 
 void print_array_gpu(bool *d_X, int n);
 
+void print_array_gpu(bool *d_X, int n, int m);
+
 int *gpu_shuffle(int *h_indices, int n);
 
 void gpu_shuffle_v2(int *d_a, int *h_indices, int n);
@@ -23,6 +25,8 @@ void gpu_shuffle_v3(int *d_in, int n, curandState *d_state);
 void gpu_random_sample(int *d_in, int k, int n, curandState *d_state);
 
 void gpu_random_sample_locked(int *d_in, int k, int n, curandState *d_state, int *d_lock);
+
+void gpu_not_random_sample_locked(int *d_in, int k, int n, int *d_state, int *d_lock);
 
 //float *copy_to_flatten_device(float **h_mem, int height, int width);
 

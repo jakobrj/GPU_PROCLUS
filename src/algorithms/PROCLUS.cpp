@@ -5,6 +5,7 @@
 #include <time.h>
 #include <cstdio>
 #include <fstream>
+#include <cmath>
 
 #define DEBUG false
 
@@ -326,33 +327,25 @@ void remove_outliers(at::Tensor data, int *C, bool **D, int *M, int n, int k, in
 
 std::vector <at::Tensor>
 PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, int termination_rounds) {
-//    printf("Start PROCLUS\n");
-    int n = data.size(0);
-    int d = data.size(1);
-//    printf("after data size\n");
 
     // Initialization Phase
-    int Ak = int(a * k);
-    int Bk = int(b * k);
+    int n = data.size(0);
+    int d = data.size(1);
+    l = std::min(l, d);
+    int Ak = std::min(n, int(a * k));
+    int Bk = std::min(n, int(b * k));
 
     int *indices = new int[n];
     for (int i = 0; i < n; i++) {
         indices[i] = i;
     }
-//    printf("before Shuffle\n");
-
-
-//    int *S = shuffle(indices, n);
     int *S = random_sample(indices, Ak, n);
-//    delete indices;
-//    printf("after Shuffle\n");
-    //float **S = gather_2d(X, per_indices, n, d);//todo stupid to do - just look up in X - wait with this
+
     float *dist = new float[n];
     float *new_dist = new float[n];
     int *M = new int[Bk];
     greedy(M, dist, new_dist, data, S, Bk, Ak, d);
     delete S;
-//    printf("After greedy\n");
 
     // Iterative Phase
     float best_objective = std::numeric_limits<float>::max();
@@ -361,27 +354,17 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
     indices = new int[Bk];
     for (int i = 0; i < Bk; i++) {
         indices[i] = i;
-//        printf("indices[i]=%d\n", indices[i] );
     }
-//    printf("After init indices\n");
-
-//    int *M_random = shuffle(indices, Bk);//todo shuffel might not be the best idea - i believe we can do somethings smarter
-    int *M_random = random_sample(indices,k, Bk);
-//    delete indices;
-//    printf("After shuffle\n");
+    int *M_random = random_sample(indices, k, Bk);
     for (int i = 0; i < k; i++) {
         int r_i = M_random[i];
-//        printf("%d<%d\n", r_i, Bk);
         M_current[i] = M[r_i];
     }
-//    printf("After picking M random\n");
 
     int termination_criterion = 0;
     int *M_best = M_current;
     int *C_best;
     bool *bad;
-
-//    printf("Before while\n");
 
     int **L = new int *[k];
     for (int i = 0; i < k; i++) {
@@ -391,17 +374,12 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
     while (termination_criterion < termination_rounds) {
 
         termination_criterion += 1;
-//        float **gathered = gather_2d(S, M_current, k, d);//todo stupid
         for (int i = 0; i < k; i++) {
-            //compute dist to nearest medoid of m_i
             int m_i = M_current[i];
             compute_l2_norm_to_medoid(dist, data, M_current, m_i, k, d);
             dist[i] = std::numeric_limits<float>::max();
             float delta_i = *std::min_element(dist, dist + k);
 
-//            printf("After Dist nearest medoid\n");
-
-            //compute L[i] Points in sphere of dist delta_i of m_i
             compute_l2_norm_to_medoid(dist, data, m_i, n, d);
             int j = 0;
             for (int p = 0; p < n; p++) {
@@ -412,17 +390,10 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
             }
             L_sizes[i] = j;
 
-//            printf("After L\n");
         }
 
         bool **D = find_dimensions(data, L, L_sizes, M_current, k, n, d, l);
-
-
-//        printf("After find_dimensions\n");
-
         int *C = assign_points(data, D, M_current, n, d, k);
-
-//        printf("After assign_points\n");
 
         float objective_function = evaluate_cluster(data, D, C, n, d, k);
         for (int i = 0; i < k; i++) {
@@ -430,7 +401,6 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
         }
         delete D;
         if (objective_function < best_objective) {
-//            printf("%f<%f\n", objective_function, best_objective);
             termination_criterion = 0;
             best_objective = objective_function;
             M_best = M_current;
@@ -442,19 +412,11 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
             delete M_current;
         }
 
-//        printf("After evaluate_cluster\n");
-
         M_current = replace_medoids(M, Bk, M_best, bad, k);
 
-//        printf("After replace_medoids\n");
     }
 
     // Refinement Phase
-    // L = C_best
-//    printf("Start refinement\n");
-
-//    int **L = new int *[k];
-//    int *L_sizes = zeros_1d<int>(k);
     for (int i = 0; i < k; i++) {
         L_sizes[i] = 0;
     }
@@ -478,7 +440,6 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
 
 
     remove_outliers(data, C, D, M_best, n, k, d);
-//    printf("After remove outliers\n");
 
 
     std::vector <at::Tensor> r;
@@ -488,7 +449,6 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
         M_Tensor[i] = M_best[i];
     }
     r.push_back(M_Tensor);
-//    printf("After M_Tensor\n");
 
     torch::Tensor D_Tensor = torch::zeros({k, d}, torch::kBool);
     for (int i = 0; i < k; i++) {
@@ -497,19 +457,11 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
         }
     }
     r.push_back(D_Tensor);
-//    printf("After D_Tensor\n");
 
     torch::Tensor C_Tensor = torch::zeros({n}, torch::kInt32);
     for (int i = 0; i < n; i++)
         C_Tensor[i] = C[i];
     r.push_back(C_Tensor);
-//    printf("After C_Tensor\n");
-
-
-//    torch::Tensor per_Tensor = torch::zeros({n}, torch::kLong);
-//    for (int i = 0; i < n; i++)
-//        per_Tensor[i] = per_indices[i];
-//    r.push_back(per_Tensor);
 
 
     for (int i = 0; i < k; i++) {

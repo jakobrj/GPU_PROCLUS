@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 font_size = 20
 dist_lim = 250
-scale_lim = 300
+scale_lim = 1000
 
 
 def get_standard_params():
@@ -88,7 +88,7 @@ def run_param(algorithm, experiment, method, n, d, k, l, a, b, min_deviation, te
         X = gen(n=n, d=d, cl=cl, std=std, re=round, cl_d=dims_pr_cl)
         X_ = gen(n=10, d=2, cl=1, std=std, re=round, cl_d=1)
 
-        algorithm(X_, 1, 1, 5, 4, min_deviation, termination_rounds)
+        GPU_PROCLUS(X_, 1, 1, 5, 4, min_deviation, termination_rounds)
         t0 = time.time()
         if method == "GPU_PROCLUS_PARAM":
             _ = algorithm(X, [k + 1, k, k - 1], [l + 1, l, l - 1], a, b, min_deviation, termination_rounds)
@@ -157,7 +157,7 @@ def plot_speedup(to_plt, xs, x_label, experiment, y_max=None):
     plt.xlabel(x_label)
     plt.legend()
     if not y_max is None:
-        plt.ylim(0, 2000)
+        plt.ylim(0, 8000)
     plt.tight_layout()
     plt.savefig("plots/" + experiment + "_speedup.pdf")
     plt.clf()
@@ -165,7 +165,7 @@ def plot_speedup(to_plt, xs, x_label, experiment, y_max=None):
 
 def run_diff_n():
     n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    ns = [1000, 2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000]  # ], 512000]#, 1024000]
+    ns = [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000]
 
     print("running experiment: inc_n")
 
@@ -204,7 +204,7 @@ def run_diff_n():
 
 def run_diff_d():
     n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    ds = [5, 10, 15, 20]  # , 25, 30, 35, 40, 45, 50]
+    ds = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
 
     print("running experiment: inc_d")
 
@@ -237,7 +237,7 @@ def run_diff_d():
 
 def run_diff_n_param():
     n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    ns = [1000, 2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000]  # ], 512000]#, 1024000]
+    ns = [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000]
 
     print("running experiment: inc_n_param")
 
@@ -275,7 +275,7 @@ def run_diff_n_param():
 
 def run_diff_d_param():
     n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    ds = [5, 10, 15, 20]  # , 25, 30, 35, 40, 45, 50]
+    ds = [10, 15, 20, 25, 30, 35, 40, 45, 50]
 
     print("running experiment: inc_d_param")
 

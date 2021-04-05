@@ -111,6 +111,46 @@ void gpu_random_sample_locked(int *d_in, int k, int n, curandState *d_state, int
     gpu_random_sample_kernel_locked<<<number_of_blocks, min(k, BLOCK_SIZE)>>>(d_in, k, n, d_state, d_lock);
 }
 
+
+
+__global__ void gpu_not_random_sample_kernel_locked(int *d_in, int k, int n, int *state, int *d_lock) {
+    for (int i = blockDim.x * blockIdx.x + threadIdx.x; i < k; i += gridDim.x * blockDim.x) {
+        int j = state[threadIdx.x] % (n);
+        state[threadIdx.x] += 11;
+
+        if (i < j) {
+            while (atomicCAS(&d_lock[i], 0, 1) != 0);
+            while (atomicCAS(&d_lock[j], 0, 1) != 0);
+        } else if (i > j) {
+            while (atomicCAS(&d_lock[j], 0, 1) != 0);
+            while (atomicCAS(&d_lock[i], 0, 1) != 0);
+        } else {
+            while (atomicCAS(&d_lock[i], 0, 1) != 0);
+        }
+
+        int tmp_idx = d_in[i];
+        d_in[i] = d_in[j];
+        d_in[j] = tmp_idx;
+
+        if (i < j) {
+            atomicExch(&d_lock[j], 0);
+            atomicExch(&d_lock[i], 0);
+        } else if (i > j) {
+            atomicExch(&d_lock[i], 0);
+            atomicExch(&d_lock[j], 0);
+        } else {
+            atomicExch(&d_lock[i], 0);
+        }
+    }
+}
+
+void gpu_not_random_sample_locked(int *d_in, int k, int n, int *d_state, int *d_lock) {
+    cudaMemset(d_lock, 0, n * sizeof(int));
+    int number_of_blocks = n / BLOCK_SIZE;
+    if (n % BLOCK_SIZE) number_of_blocks++;
+    gpu_not_random_sample_kernel_locked<<<1, 1>>>(d_in, k, n, d_state, d_lock);
+}
+
 //float *copy_to_flatten_device(float **h_mem, int height, int width) {
 //    float *d_mem;
 //    cudaMalloc(&d_mem, height * width * sizeof(float));
@@ -256,6 +296,13 @@ void print_array_gpu(bool *d_X, int n) {
     print_array_gpu_kernel << < 1, 1 >> > (d_X, n);
     cudaDeviceSynchronize();
 }
+//
+//void print_array_gpu(bool *d_X, int n, int m) {
+//    for(int i =0;i<n;i++) {
+//        print_array_gpu_kernel << < 1, 1 >> > (&d_X[i*m], m);
+//        cudaDeviceSynchronize();
+//    }
+//}
 
 __global__
 void print_array_gpu_kernel(float *x, int n, int m) {
@@ -458,8 +505,6 @@ bool *device_allocate_bool(int n) {
     cudaMalloc(&tmp, n * sizeof(bool));
     return tmp;
 }
-
-
 
 int *device_allocate_int_zero(int n) {
     int *tmp;
