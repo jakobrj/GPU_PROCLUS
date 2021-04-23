@@ -245,6 +245,18 @@ int *random_sample(int *indices, int k, int n) {
     return indices;
 }
 
+int *not_random_sample(int *in, int *state, int state_length, int k, int n) {
+    for (int i = 0; i < k; i++) {
+        int j = state[0] % n;//i % state_length
+        state[0] += 11;
+
+        int tmp_idx = in[i];
+        in[i] = in[j];
+        in[j] = tmp_idx;
+    }
+    return in;
+}
+
 
 template<typename T>
 T **array_2d(int n, int m) {
@@ -317,6 +329,14 @@ float **gather_2d(at::Tensor S, int *indices, int k, int d) {
     return R;
 }
 
+int *fill_with_indices(int n) {
+    int *h_S = new int[n];
+    for (int p = 0; p < n; p++) {
+        h_S[p] = p;
+    }
+    return h_S;
+}
+
 void print_debug(char *str, bool debug) {
     if (debug)
         printf(str);
@@ -383,6 +403,26 @@ void print_array(bool *x, int n) {
 }
 
 void print_array(float **X, int n, int m) {
+    int left = 30;
+    int right = 30;
+
+    if (n <= left + right) {
+        for (int i = 0; i < n; i++) {
+            print_array(X[i], m);
+        }
+    } else {
+        for (int i = 0; i < left; i++) {
+            print_array(X[i], m);
+        }
+        printf(" ... \n");
+        for (int i = n - right; i < n; i++) {
+            print_array(X[i], m);
+        }
+    }
+    printf("\n");
+}
+
+void print_array(bool **X, int n, int m) {
     int left = 30;
     int right = 30;
 

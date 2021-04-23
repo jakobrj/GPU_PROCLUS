@@ -76,17 +76,21 @@ def load_synt_gauss(d, n, cl, std, cl_n=None, cl_d=None, noise=0.01, re=0):
 
     return normalize(torch.from_numpy(X)).float()
 
+
 def load_skyserver_0_5x0_5():
     m_list = []
     for r in ["(0_0.5_0_0.5)"]:
-        m_list.append(torch.from_numpy(np.loadtxt("data/real/skyserver/result " + r + ".csv", delimiter=',', skiprows=1)).float())
+        m_list.append(
+            torch.from_numpy(np.loadtxt("data/real/skyserver/result " + r + ".csv", delimiter=',', skiprows=1)).float())
     m = torch.cat(m_list)
     return normalize(m)
+
 
 def load_skyserver_1x1():
     m_list = []
     for r in ["(0_0.5_0_0.5)", "(0_0.5_0.5_1)", "(0.5_1_0_0.5)", "(0.5_1_0.5_1)"]:
-        m_list.append(torch.from_numpy(np.loadtxt("data/real/skyserver/result " + r + ".csv", delimiter=',', skiprows=1)).float())
+        m_list.append(
+            torch.from_numpy(np.loadtxt("data/real/skyserver/result " + r + ".csv", delimiter=',', skiprows=1)).float())
     m = torch.cat(m_list)
     return normalize(m)
 
@@ -100,13 +104,13 @@ impl = load(name="GPU_PROCLUS",
                 "src/algorithms/GPU_PROCLUS.cu",
                 "src/utils/util.cpp",
                 "src/utils/gpu_util.cu"
-            ],
-            with_cuda=True)
+            ], extra_cuda_cflags=["-w"], extra_cflags=["-w"], with_cuda=True)
+
 print("Finished compilation, took: %.4fs" % (time.time() - t0))
 
 
-def PROCLUS(X, k, l, a, b, min_deviation, termination_rounds):
-    return impl.PROCLUS(X, k, l, a, b, min_deviation, termination_rounds)
+def PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=False):
+    return impl.PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug)
 
 
 def GPU_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=False):

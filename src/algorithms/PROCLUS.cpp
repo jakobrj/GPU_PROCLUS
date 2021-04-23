@@ -26,13 +26,21 @@ float manhattan_segmental_distance(bool *D_i, at::Tensor data, int m_i, int m_j,
 void greedy(int *M, float *dist, float *new_dist, at::Tensor data, int *S, int Bk, int Ak, int d) {
 
 //    int *M = new int[Bk];
-    M[0] = S[std::rand() % Ak];
+    int rnd_start = Ak / 2;//std::rand() % Ak
+    M[0] = S[rnd_start];
     compute_l2_norm_to_medoid(dist, data, S, M[0], Ak, d);
 
     for (int i = 1; i < Bk; i++) {
-        dist[M[i - 1]] = -1.;
+//        dist[M[i - 1]] = -1.;
+
+        printf("dist:\n");
+        print_array(dist, Ak);
+
         M[i] = S[argmax_1d(dist, Ak)];
         int m_i = M[i];
+
+        printf("m_i: %d\n", m_i);
+
         compute_l2_norm_to_medoid(new_dist, data, S, m_i, Ak, d);
         index_wise_minimum(dist, new_dist, Ak);
     }
@@ -209,8 +217,10 @@ float evaluate_cluster(at::Tensor data, bool **D, int *C, int n, int d, int k) {
         w[i] = 0.;
         int size = 0;
         for (int j = 0; j < d; j++) {
-            w[i] += Y[i][j];
-            size++;
+            if (D[i][j]) {
+                w[i] += Y[i][j];
+                size++;
+            }
         }
         w[i] /= size;
     }
@@ -256,9 +266,17 @@ bool *bad_medoids(int *C, int k, float min_deviation, int n) {
     return bad;
 }
 
-int *replace_medoids(int *M, int M_length, int *M_best, bool *bad, int k) {
+int *
+replace_medoids(int *M, int M_length, int *M_best, bool *bad, int *state_fixed, int state_length, int k, bool debug) {
 //    int *M_random = shuffle(M, M_length);
-    int *M_random = random_sample(M, k, M_length);
+    int *M_random;//= random_sample(M, k, M_length);
+
+    if (debug) {
+        M_random = not_random_sample(M, state_fixed, state_length, k, M_length);
+    } else {
+        M_random = random_sample(M, k, M_length);
+    }
+
     int *M_current = new int[k];
 
     int j = 0;
@@ -326,26 +344,49 @@ void remove_outliers(at::Tensor data, int *C, bool **D, int *M, int n, int k, in
 }
 
 std::vector <at::Tensor>
-PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, int termination_rounds) {
+PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, int termination_rounds, bool debug) {
 
-    // Initialization Phase
+    /// Initialization Phase
     int n = data.size(0);
     int d = data.size(1);
     l = std::min(l, d);
     int Ak = std::min(n, int(a * k));
     int Bk = std::min(n, int(b * k));
 
+    // Initialize fixed set of "random" integers for debugging
+    int state_length = 1024;
+    int *state_fixed;
+    if (debug) {
+        state_fixed = fill_with_indices(state_length);
+    }
+
     int *indices = new int[n];
     for (int i = 0; i < n; i++) {
         indices[i] = i;
     }
-    int *S = random_sample(indices, Ak, n);
+
+    int *S;
+    if (debug) {
+        S = not_random_sample(indices, state_fixed, state_length, Ak, n);
+    } else {
+        S = random_sample(indices, Ak, n);
+    }
+
+    if (debug) {
+        printf("S:\n");
+        print_array(S, Ak);
+    }
 
     float *dist = new float[n];
     float *new_dist = new float[n];
     int *M = new int[Bk];
     greedy(M, dist, new_dist, data, S, Bk, Ak, d);
     delete S;
+
+    if (debug) {
+        printf("M:\n");
+        print_array(M, Bk);
+    }
 
     // Iterative Phase
     float best_objective = std::numeric_limits<float>::max();
@@ -355,7 +396,13 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
     for (int i = 0; i < Bk; i++) {
         indices[i] = i;
     }
-    int *M_random = random_sample(indices, k, Bk);
+    int *M_random;
+    if (debug) {
+        M_random = not_random_sample(indices, state_fixed, state_length, k, Bk);
+    } else {
+        M_random = random_sample(indices, k, Bk);
+    }
+
     for (int i = 0; i < k; i++) {
         int r_i = M_random[i];
         M_current[i] = M[r_i];
@@ -371,6 +418,7 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
         L[i] = new int[n];
     }
     int *L_sizes = new int[k];
+
     while (termination_criterion < termination_rounds) {
 
         termination_criterion += 1;
@@ -396,6 +444,37 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
         int *C = assign_points(data, D, M_current, n, d, k);
 
         float objective_function = evaluate_cluster(data, D, C, n, d, k);
+
+        if (debug) {
+//            printf("d_delta: ");
+//            print_array_gpu(d_delta, k);
+//            printf("d_termination_criterion: ");
+//            print_array_gpu(d_termination_criterion, 1);
+            std::vector <std::vector<int>> v_C;
+            for (int i = 0; i < n; i++) {
+                int c_id = C[i];
+                if (c_id >= 0) {
+                    while (v_C.size() <= c_id) {
+                        std::vector<int> empty;
+                        v_C.push_back(empty);
+                    }
+                    v_C[c_id].push_back(i);
+                }
+            }
+            printf("C_sizes:");
+            for (auto c: v_C) {
+                printf(" %d", c.size());
+            }
+            printf("\n");
+
+            printf("D: ");
+            print_array(D, k, d);
+            printf("cost: %f\n", objective_function);
+            printf("M_current: ");
+            print_array(M_current, k);
+        }
+
+
         for (int i = 0; i < k; i++) {
             delete D[i];
         }
@@ -412,7 +491,7 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
             delete M_current;
         }
 
-        M_current = replace_medoids(M, Bk, M_best, bad, k);
+        M_current = replace_medoids(M, Bk, M_best, bad, state_fixed, state_length, k, debug);
 
     }
 
@@ -424,7 +503,6 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
     for (int p = 0; p < n; p++) {
         L_sizes[C_best[p]] += 1;
     }
-
 
     int *l_j = zeros_1d<int>(k);
     for (int i = 0; i < n; i++) {
@@ -438,9 +516,7 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
 
     int *C = assign_points(data, D, M_best, n, d, k);
 
-
     remove_outliers(data, C, D, M_best, n, k, d);
-
 
     std::vector <at::Tensor> r;
 
@@ -459,8 +535,9 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
     r.push_back(D_Tensor);
 
     torch::Tensor C_Tensor = torch::zeros({n}, torch::kInt32);
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < n; i++) {
         C_Tensor[i] = C[i];
+    }
     r.push_back(C_Tensor);
 
 

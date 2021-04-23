@@ -7,6 +7,6 @@
 #include <cuda_runtime.h>
 
 std::vector <at::Tensor>
-PROCLUS(at::Tensor X, int k, int l, float a, float b, float min_deviation, int termination_rounds);
+PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, int termination_rounds, bool debug);
 
 #endif //PROCLUS_GPU_PROCLUS_H

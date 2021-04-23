@@ -18,7 +18,9 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
     }
 }
 
-__device__ __forceinline__ float atomicMin(float *addr, float value) {
+__device__ __forceinline__
+
+float atomicMin(float *addr, float value) {
     float old;
     old = (value >= 0) ? __int_as_float(atomicMin((int *) addr, __float_as_int(value))) :
           __uint_as_float(atomicMax((unsigned int *) addr, __float_as_uint(value)));
@@ -26,7 +28,9 @@ __device__ __forceinline__ float atomicMin(float *addr, float value) {
     return old;
 }
 
-__device__ __forceinline__ float atomicMax(float *addr, float value) {
+__device__ __forceinline__
+
+float atomicMax(float *addr, float value) {
     float old;
     old = (value >= 0) ? __int_as_float(atomicMax((int *) addr, __float_as_int(value))) :
           __uint_as_float(atomicMin((unsigned int *) addr, __float_as_uint(value)));
@@ -125,14 +129,24 @@ int *gpu_greedy(float *d_data, int *d_S, int Bk, int Ak, int d, int n) {
     if (Ak % BLOCK_SIZE_SMALL) number_of_blocks++;
     dim3 grid(number_of_blocks);
 
-    gpu_greedy_kernel_dist_max<<<grid, BLOCK_SIZE_SMALL>>>(d_max_value, d_data, d_M, d_S, d_dist, Ak, d, 0);
+    gpu_greedy_kernel_dist_max << < grid, BLOCK_SIZE_SMALL >> > (d_max_value, d_data, d_M, d_S, d_dist, Ak, d, 0);
 
     for (int i = 1; i < Bk; i++) {
-        gpu_greedy_kernel_largest_2<<<grid, BLOCK_SIZE_SMALL>>>(d_max_value, d_S, d_M, d_dist, d_prev, Ak, i, n);
+
+
+        printf("d_dist:\n");
+        print_array_gpu(d_dist, Ak);
+
+        gpu_greedy_kernel_largest_2 << < grid, BLOCK_SIZE_SMALL >> > (d_max_value, d_S, d_M, d_dist, d_prev, Ak, i, n);
+
+
+        printf("m_i: ");
+        print_array_gpu(&d_M[i], 1);
 
         cudaMemset(d_max_value, 0, sizeof(float));
 
-        gpu_greedy_kernel_dist_min_max<<<grid, BLOCK_SIZE_SMALL>>>(d_max_value, d_data, d_M, d_S, d_dist, Ak, d, i);
+        gpu_greedy_kernel_dist_min_max << < grid, BLOCK_SIZE_SMALL >> >
+                                                  (d_max_value, d_data, d_M, d_S, d_dist, Ak, d, i);
     }
 
 
@@ -203,16 +217,17 @@ void gpu_compute_L(int *d_L, int *d_L_sizes,
     int number_of_blocks = n / BLOCK_SIZE_SMALL;
     if (n % BLOCK_SIZE) number_of_blocks++;
     dim3 grid_k_n(k, number_of_blocks);
-    gpu_compute_L_kernel_sum_dist_V2<<<grid_k_n, min(n, BLOCK_SIZE_SMALL), d * sizeof(float)>>>(d_dist_n_k, d_M_current,
-                                                                                                d_data,
-                                                                                                n, d, k);
+    gpu_compute_L_kernel_sum_dist_V2 << < grid_k_n, min(n, BLOCK_SIZE_SMALL), d * sizeof(float) >> >
+                                                                              (d_dist_n_k, d_M_current,
+                                                                                      d_data,
+                                                                                      n, d, k);
 
     //compute delta
-    gpu_compute_L_kernel_compute_delta_V2<<<1, k>>>(d_delta, d_dist_n_k, d_M_current, n, k);
+    gpu_compute_L_kernel_compute_delta_V2 << < 1, k >> > (d_delta, d_dist_n_k, d_M_current, n, k);
 
     //compute L
     cudaMemset(d_L_sizes, 0, k * sizeof(int));
-    gpu_compute_L_kernel_compute_L_V2<<<k, min(n, BLOCK_SIZE)>>>(d_L, d_L_sizes, d_delta, d_dist_n_k, n, k);
+    gpu_compute_L_kernel_compute_L_V2 << < k, min(n, BLOCK_SIZE) >> > (d_L, d_L_sizes, d_delta, d_dist_n_k, n, k);
 }
 
 __global__
@@ -273,12 +288,15 @@ void gpu_find_dimensions_kernel_compute_D(bool *d_D, float *d_Z, int k, int d, i
     //# ensuring that we find atleast 2 for each and than the k*l #todo fast - sort first instead
 
     extern __shared__ float min_values[];
+    int *i_was_firsts = (int *) &min_values[k];
     __shared__ float min_value;
+    __shared__ int i_was_first;
 
     for (int _ = 0; _ < 2; _++) {
 
         for (int i = threadIdx.x; i < k; i += blockDim.x) {
             min_values[i] = 1000000.;//todo not nice
+            i_was_firsts[i] = 1;
         }
         __syncthreads();
 
@@ -292,8 +310,11 @@ void gpu_find_dimensions_kernel_compute_D(bool *d_D, float *d_Z, int k, int d, i
         for (int i = threadIdx.x; i < k; i += blockDim.x) {
             for (int j = threadIdx.y; j < d; j += blockDim.y) {
                 if (d_Z[i * d + j] == min_values[i]) {
-                    d_Z[i * d + j] = 1000000.;//todo not nice
-                    d_D[i * d + j] = true;
+                    int was_i_first = atomicCAS(&i_was_firsts[i], 1, 0); //(old == compare ? val : old)
+                    if (was_i_first) {
+                        d_Z[i * d + j] = 1000000.;//todo not nice
+                        d_D[i * d + j] = true;
+                    }
                 }
             }
         }
@@ -302,6 +323,7 @@ void gpu_find_dimensions_kernel_compute_D(bool *d_D, float *d_Z, int k, int d, i
 
     for (int _ = k * 2; _ < k * l; _++) {
         min_value = 1000000.;//todo not nice
+        i_was_first = 1;
         __syncthreads();
 
         for (int i = threadIdx.x; i < k; i += blockDim.x) {
@@ -314,8 +336,11 @@ void gpu_find_dimensions_kernel_compute_D(bool *d_D, float *d_Z, int k, int d, i
         for (int i = threadIdx.x; i < k; i += blockDim.x) {
             for (int j = threadIdx.y; j < d; j += blockDim.y) {
                 if (d_Z[i * d + j] == min_value) {
-                    d_Z[i * d + j] = 1000000.;//todo not nice
-                    d_D[i * d + j] = true;
+                    int was_i_first = atomicCAS(&i_was_first, 1, 0); //(old == compare ? val : old)
+                    if (was_i_first) {
+                        d_Z[i * d + j] = 1000000.;//todo not nice
+                        d_D[i * d + j] = true;
+                    }
                 }
             }
         }
@@ -369,7 +394,7 @@ void gpu_find_dimensions(bool *d_D, float *d_Z, float *d_X,
     int number_of_blocks = (k * d) / BLOCK_SIZE;
     if ((k * d) % BLOCK_SIZE) number_of_blocks++;
 
-    set_all<<<number_of_blocks, min(k * d, BLOCK_SIZE)>>>(d_X, 0, k * d);
+    set_all << < number_of_blocks, min(k * d, BLOCK_SIZE) >> > (d_X, 0, k * d);
 
 
     int remaining_d = BLOCK_SIZE / d;
@@ -379,18 +404,18 @@ void gpu_find_dimensions(bool *d_D, float *d_Z, float *d_X,
     dim3 block_X_join_v2(d, remaining_d);
 
     cudaMemset(d_X, 0, d * k * sizeof(float));
-    gpu_find_dimensions_kernel_X<<<grid_X_join_v2, block_X_join_v2>>>(d_X,
-                                                                      d_L, d_L_sizes,
-                                                                      d_M_current,
-                                                                      d_data,
-                                                                      n, d, k);
+    gpu_find_dimensions_kernel_X << < grid_X_join_v2, block_X_join_v2 >> > (d_X,
+            d_L, d_L_sizes,
+            d_M_current,
+            d_data,
+            n, d, k);
 
-    gpu_find_dimensions_kernel_Z<<<k, d>>>(d_Z, d_X, k, d);
+    gpu_find_dimensions_kernel_Z << < k, d >> > (d_Z, d_X, k, d);
 
     //compute D
-    set_all<<<number_of_blocks, min(k * d, BLOCK_SIZE)>>>(d_D, false, k * d);
+    set_all << < number_of_blocks, min(k * d, BLOCK_SIZE) >> > (d_D, false, k * d);
     dim3 block(min(32, k), min(32, d));
-    gpu_find_dimensions_kernel_compute_D<<<1, block, k * sizeof(float)>>>(d_D, d_Z, k, d, l);
+    gpu_find_dimensions_kernel_compute_D << < 1, block, 2 * k * sizeof(float) >> > (d_D, d_Z, k, d, l);
 }
 
 __global__
@@ -498,9 +523,9 @@ void gpu_assign_points(int *d_C, int *d_C_sizes,
     cudaMemset(d_Ds, 0, k * d * sizeof(int));
     cudaMemset(d_D_sizes, 0, k * sizeof(int));
 
-    gpu_restructure_D<<<k, d>>>(d_Ds, d_D_sizes, d_D, d, k);
+    gpu_restructure_D << < k, d >> > (d_Ds, d_D_sizes, d_D, d, k);
 
-    gpu_assign_points_kernel<<<number_of_blocks, block_n_k, min(n, remaining) * sizeof(float)>>>(
+    gpu_assign_points_kernel << < number_of_blocks, block_n_k, min(n, remaining) * sizeof(float) >> > (
             d_Ds, d_D_sizes, d_C, d_C_sizes, d_data, d_M_current, n, k, d);
 
 //    gpu_assign_points_kernel<<<number_of_blocks, BLOCK_SIZE>>>(d_Ds, d_D_sizes, d_C, d_C_sizes, d_data, d_M_current, n,
@@ -559,8 +584,8 @@ gpu_evaluate_cluster(float *d_cost, int *d_C, int *d_C_sizes, bool *d_D, int *d_
     dim3 block(512);
 
     cudaMemset(d_cost, 0, sizeof(float));
-    gpu_evaluate_cluster_kernel<<<grid, block>>>(d_cost, d_C, d_C_sizes, d_D, d_D_sizes, d_data,
-                                                 n, d, k);
+    gpu_evaluate_cluster_kernel << < grid, block >> > (d_cost, d_C, d_C_sizes, d_D, d_D_sizes, d_data,
+            n, d, k);
 }
 
 __global__
@@ -643,10 +668,12 @@ gpu_update_best(float *d_cost, float *d_cost_best,
                 bool *d_bad,
                 float min_deviation, int n, int k) {
 
-    gpu_update_best_kernel_is_best<<<1, 1 >>>(d_cost, d_cost_best, d_termination_criterion);
-    gpu_update_best_kernel_init_k<<<1, k >>>(d_termination_criterion, d_M_best, d_M_current, d_bad, k);
-    gpu_update_best_kernel_C<<<k, BLOCK_SIZE >>>(d_C_best, d_C_sizes_best, d_C, d_C_sizes, d_termination_criterion, n);
-    gpu_update_best_kernel_find_bad<<<1, k >>>(d_C_sizes_best, d_termination_criterion, d_bad, k, n, min_deviation);
+    gpu_update_best_kernel_is_best << < 1, 1 >> > (d_cost, d_cost_best, d_termination_criterion);
+    gpu_update_best_kernel_init_k << < 1, k >> > (d_termination_criterion, d_M_best, d_M_current, d_bad, k);
+    gpu_update_best_kernel_C << < k, BLOCK_SIZE >> >
+                                     (d_C_best, d_C_sizes_best, d_C, d_C_sizes, d_termination_criterion, n);
+    gpu_update_best_kernel_find_bad << < 1, k >> >
+                                            (d_C_sizes_best, d_termination_criterion, d_bad, k, n, min_deviation);
 
 }
 
@@ -746,20 +773,20 @@ void remove_outliers(int *d_C_result, int *d_C_best, int *d_C_sizes_best,
                      float *d_data,
                      int n, int d, int k) {
 
-    set_all<<<1, k>>>(d_delta, 1000000., k);//todo not nice
+    set_all << < 1, k >> > (d_delta, 1000000., k);//todo not nice
 
-    remove_outliers_kernel_min_delta<<<k, min(k, BLOCK_SIZE)>>>(d_delta,
-                                                                d_D,
-                                                                d_M_best,
-                                                                d_data,
-                                                                d, k);
+    remove_outliers_kernel_min_delta << < k, min(k, BLOCK_SIZE) >> > (d_delta,
+            d_D,
+            d_M_best,
+            d_data,
+            d, k);
 
-    remove_outliers_kernel_remove<<<k, BLOCK_SIZE>>>(d_C_result, d_C_best, d_C_sizes_best,
-                                                     d_delta,
-                                                     d_D,
-                                                     d_M_best,
-                                                     d_data,
-                                                     n, d, k);
+    remove_outliers_kernel_remove << < k, BLOCK_SIZE >> > (d_C_result, d_C_best, d_C_sizes_best,
+            d_delta,
+            d_D,
+            d_M_best,
+            d_data,
+            n, d, k);
 
 }
 
@@ -773,7 +800,7 @@ void fill_with_indices_kernel(int *d_S, int n) {
 void fill_with_indices(int *d_S, int n) {
     int number_of_blocks = n / BLOCK_SIZE;
     if (n % BLOCK_SIZE) number_of_blocks++;
-    fill_with_indices_kernel<<<number_of_blocks, min(n, BLOCK_SIZE)>>>(d_S, n);
+    fill_with_indices_kernel << < number_of_blocks, min(n, BLOCK_SIZE) >> > (d_S, n);
 }
 
 std::vector <at::Tensor>
@@ -796,7 +823,7 @@ GPU_PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation
     //initializing random generator for cuda
     curandState *d_state;
     cudaMalloc(&d_state, BLOCK_SIZE * sizeof(curandState));
-    init_seed<<<1, BLOCK_SIZE>>>(d_state, 42);
+    init_seed << < 1, BLOCK_SIZE >> > (d_state, 42);
 
     int *d_state_fixed;
     if (debug) {
@@ -840,7 +867,17 @@ GPU_PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation
         gpu_random_sample_locked(d_S, Ak, n, d_state, d_lock);
     }
 
+    if (debug) {
+        printf("d_S:\n");
+        print_array_gpu(d_S, Ak);
+    }
+
     int *d_M = gpu_greedy(d_data, d_S, Bk, Ak, d, n);
+
+    if (debug) {
+        printf("d_M:\n");
+        print_array_gpu(d_M, Bk);
+    }
 
     //// Iterative Phase ////
     fill_with_indices(d_M_random, Bk);
@@ -888,12 +925,12 @@ GPU_PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation
 
 
         if (debug) {
-            printf("d_delta: ");
-            print_array_gpu(d_delta, k);
+//            printf("d_delta: ");
+//            print_array_gpu(d_delta, k);
             printf("d_C_sizes: ");
             print_array_gpu(d_C_sizes, k);
-            printf("d_termination_criterion: ");
-            print_array_gpu(d_termination_criterion, 1);
+//            printf("d_termination_criterion: ");
+//            print_array_gpu(d_termination_criterion, 1);
             printf("d_D: ");
             print_array_gpu(d_D, k, d);
             printf("d_cost: ");
@@ -1073,20 +1110,20 @@ void gpu_compute_L_keep(int *d_L, int *d_L_sizes_change, int *d_L_sizes, int *d_
     int number_of_blocks = n / BLOCK_SIZE_SMALL;
     if (n % BLOCK_SIZE) number_of_blocks++;
     dim3 grid_k_n(num_bad, number_of_blocks);
-    gpu_compute_L_kernel_KEEP_dist<<<grid_k_n, min(n, BLOCK_SIZE_SMALL), d * sizeof(float)>>>(d_dist_n_k,
-                                                                                              d_M_current, d_M_bad,
-                                                                                              d_data,
-                                                                                              n, d);
+    gpu_compute_L_kernel_KEEP_dist << < grid_k_n, min(n, BLOCK_SIZE_SMALL), d * sizeof(float) >> > (d_dist_n_k,
+            d_M_current, d_M_bad,
+            d_data,
+            n, d);
 
     //compute delta
-    gpu_compute_L_kernel_compute_delta_V2<<<1, k>>>(d_delta, d_dist_n_k, d_M_current, n, k);
+    gpu_compute_L_kernel_compute_delta_V2 << < 1, k >> > (d_delta, d_dist_n_k, d_M_current, n, k);
 
     //compute L
     cudaMemset(d_L_sizes_change, 0, k * sizeof(int));
-    gpu_compute_L_kernel_KEEP_L<<<k, min(n, BLOCK_SIZE)>>>(d_lambda, d_L, d_L_sizes, d_L_sizes_change,
-                                                           d_dist_n_k,
-                                                           d_delta, d_delta_old,
-                                                           n);
+    gpu_compute_L_kernel_KEEP_L << < k, min(n, BLOCK_SIZE) >> > (d_lambda, d_L, d_L_sizes, d_L_sizes_change,
+            d_dist_n_k,
+            d_delta, d_delta_old,
+            n);
 
     cudaMemcpy(d_delta_old, d_delta, k * sizeof(float), cudaMemcpyDeviceToDevice);
 }
@@ -1136,7 +1173,7 @@ void gpu_find_dimensions_keep(bool *d_D, float *d_Z, float *d_X, float *d_H,
     int number_of_blocks = (k * d) / BLOCK_SIZE;
     if ((k * d) % BLOCK_SIZE) number_of_blocks++;
 
-    set_all<<<number_of_blocks, min(k * d, BLOCK_SIZE)>>>(d_X, 0, k * d);
+    set_all << < number_of_blocks, min(k * d, BLOCK_SIZE) >> > (d_X, 0, k * d);
 
     int remaining_d = BLOCK_SIZE / d;
     int number_of_blocks_X_join_v2 = (n / k) / remaining_d;
@@ -1145,20 +1182,20 @@ void gpu_find_dimensions_keep(bool *d_D, float *d_Z, float *d_X, float *d_H,
     dim3 block_X_join_v2(d, remaining_d);
 
 
-    gpu_find_dimensions_kernel_KEEP_H<<<grid_X_join_v2, block_X_join_v2>>>(d_H,
-                                                                           d_L, d_L_sizes_change, d_lambda,
-                                                                           d_M_current,
-                                                                           d_data,
-                                                                           n, d);
+    gpu_find_dimensions_kernel_KEEP_H << < grid_X_join_v2, block_X_join_v2 >> > (d_H,
+            d_L, d_L_sizes_change, d_lambda,
+            d_M_current,
+            d_data,
+            n, d);
 
-    gpu_find_dimensions_kernel_KEEP_X<<<k, d>>>(d_X, d_H, d_L_sizes, d);
+    gpu_find_dimensions_kernel_KEEP_X << < k, d >> > (d_X, d_H, d_L_sizes, d);
 
-    gpu_find_dimensions_kernel_Z<<<k, d>>>(d_Z, d_X, k, d);
+    gpu_find_dimensions_kernel_Z << < k, d >> > (d_Z, d_X, k, d);
 
     //compute D
-    set_all<<<number_of_blocks, min(k * d, BLOCK_SIZE)>>>(d_D, false, k * d);
+    set_all << < number_of_blocks, min(k * d, BLOCK_SIZE) >> > (d_D, false, k * d);
     dim3 block(min(32, k), min(32, d));
-    gpu_find_dimensions_kernel_compute_D<<<1, block, k * sizeof(float)>>>(d_D, d_Z, k, d, l);
+    gpu_find_dimensions_kernel_compute_D << < 1, block, 2 * k * sizeof(float) >> > (d_D, d_Z, k, d, l);
 }
 
 __global__
@@ -1235,7 +1272,7 @@ GPU_PROCLUS_KEEP(at::Tensor data, int k, int l, float a, float b, float min_devi
     //initializing random generator for cuda
     curandState *d_state;
     cudaMalloc(&d_state, BLOCK_SIZE * sizeof(curandState));
-    init_seed<<<1, BLOCK_SIZE>>>(d_state, 42);
+    init_seed << < 1, BLOCK_SIZE >> > (d_state, 42);
 
     int *d_state_fixed;
     if (debug) {
@@ -1372,10 +1409,11 @@ GPU_PROCLUS_KEEP(at::Tensor data, int k, int l, float a, float b, float min_devi
             gpu_random_sample_locked(d_M_random, k, Bk, d_state, d_lock);
         }
 
-        gpu_replace_medoids_kernel_Keep<<< 1, 1, k * sizeof(int)>>>(d_M_bad, d_num_bad, d_M_current, d_M_random, d_M,
-                                                                    d_M_best, d_bad, k);
+        gpu_replace_medoids_kernel_Keep << < 1, 1, k * sizeof(int) >> >
+                                                   (d_M_bad, d_num_bad, d_M_current, d_M_random, d_M,
+                                                           d_M_best, d_bad, k);
         cudaMemcpy(&num_bad, d_num_bad, sizeof(int), cudaMemcpyDeviceToHost);
-        gpu_replace_medoids_kernel_keep_reset<<<num_bad, d>>>(d_L_sizes, d_delta_old, d_H, d_M_bad, d);
+        gpu_replace_medoids_kernel_keep_reset << < num_bad, d >> > (d_L_sizes, d_delta_old, d_H, d_M_bad, d);
 
     }
 
@@ -1558,24 +1596,24 @@ void gpu_compute_L_save(int *d_L, int *d_L_sizes_change, int *d_L_sizes, int *d_
     int number_of_blocks = n / BLOCK_SIZE_SMALL;
     if (n % BLOCK_SIZE) number_of_blocks++;
     dim3 grid_k_n(k, number_of_blocks);
-    gpu_compute_L_kernel_sum_dist_SAVE<<<grid_k_n, min(n, BLOCK_SIZE_SMALL), d * sizeof(float)>>>(d_M_idx, d_M,
-                                                                                                  d_data,
-                                                                                                  d_dist_n_Bk,
-                                                                                                  d_dist_n_Bk_set,
-                                                                                                  k, d, n);
+    gpu_compute_L_kernel_sum_dist_SAVE << < grid_k_n, min(n, BLOCK_SIZE_SMALL), d * sizeof(float) >> > (d_M_idx, d_M,
+            d_data,
+            d_dist_n_Bk,
+            d_dist_n_Bk_set,
+            k, d, n);
 
-    gpu_compute_L_kernel_sqrt_dist_pre_mark<<<1, k>>>(d_M_idx, d_dist_n_Bk, d_dist_n_Bk_set, k, n);
+    gpu_compute_L_kernel_sqrt_dist_pre_mark << < 1, k >> > (d_M_idx, d_dist_n_Bk, d_dist_n_Bk_set, k, n);
 
     //compute delta
-    gpu_compute_L_kernel_compute_delta_pre<<<1, k>>>(d_M_idx, d_M, d_delta, d_dist_n_Bk, k, n);
+    gpu_compute_L_kernel_compute_delta_pre << < 1, k >> > (d_M_idx, d_M, d_delta, d_dist_n_Bk, k, n);
 
     //compute L
     cudaMemset(d_L_sizes_change, 0, k * sizeof(int));
-    gpu_compute_L_kernel_compute_L_pre<<<k, min(n, BLOCK_SIZE)>>>(d_lambda, d_M_idx, d_L, d_L_sizes,
-                                                                  d_L_sizes_change,
-                                                                  d_dist_n_Bk, d_delta, d_delta_old, k, n);
+    gpu_compute_L_kernel_compute_L_pre << < k, min(n, BLOCK_SIZE) >> > (d_lambda, d_M_idx, d_L, d_L_sizes,
+            d_L_sizes_change,
+            d_dist_n_Bk, d_delta, d_delta_old, k, n);
 
-    gpu_compute_L_kernel_set_old_delta_pre<<<1, k>>>(d_M_idx, d_delta_old, d_delta, k);
+    gpu_compute_L_kernel_set_old_delta_pre << < 1, k >> > (d_M_idx, d_delta_old, d_delta, k);
 }
 
 
@@ -1639,7 +1677,7 @@ void gpu_find_dimensions_save(bool *d_D, float *d_Z, float *d_X, float *d_H,
     int number_of_blocks = (k * d) / BLOCK_SIZE;
     if ((k * d) % BLOCK_SIZE) number_of_blocks++;
 
-    set_all<<<number_of_blocks, min(k * d, BLOCK_SIZE)>>>(d_X, 0, k * d);
+    set_all << < number_of_blocks, min(k * d, BLOCK_SIZE) >> > (d_X, 0, k * d);
 
 
     int remaining_d = BLOCK_SIZE / d;
@@ -1649,22 +1687,22 @@ void gpu_find_dimensions_save(bool *d_D, float *d_Z, float *d_X, float *d_H,
     dim3 block_X_join_v2(d, remaining_d);
 
 
-    gpu_find_dimensions_kernel_SAVE_H<<<grid_X_join_v2, block_X_join_v2>>>(d_X, d_H, d_data, d_L,
-                                                                           d_L_sizes_change, d_L_sizes, d_lambda,
-                                                                           d_M_current, d_M_idx,
-                                                                           k, d, n);
+    gpu_find_dimensions_kernel_SAVE_H << < grid_X_join_v2, block_X_join_v2 >> > (d_X, d_H, d_data, d_L,
+            d_L_sizes_change, d_L_sizes, d_lambda,
+            d_M_current, d_M_idx,
+            k, d, n);
 
-    gpu_find_dimensions_kernel_SAVE_X<<<k, d>>>(d_X, d_H, d_data, d_L,
-                                                d_L_sizes_change, d_L_sizes, d_lambda,
-                                                d_M_current, d_M_idx,
-                                                k, d, n);
+    gpu_find_dimensions_kernel_SAVE_X << < k, d >> > (d_X, d_H, d_data, d_L,
+            d_L_sizes_change, d_L_sizes, d_lambda,
+            d_M_current, d_M_idx,
+            k, d, n);
 
-    gpu_find_dimensions_kernel_Z<<<k, d>>>(d_Z, d_X, k, d);
+    gpu_find_dimensions_kernel_Z << < k, d >> > (d_Z, d_X, k, d);
 
     //compute D
-    set_all<<<number_of_blocks, min(k * d, BLOCK_SIZE)>>>(d_D, false, k * d);
+    set_all << < number_of_blocks, min(k * d, BLOCK_SIZE) >> > (d_D, false, k * d);
     dim3 block(min(32, k), min(32, d));
-    gpu_find_dimensions_kernel_compute_D<<<1, block, k * sizeof(float)>>>(d_D, d_Z, k, d, l);
+    gpu_find_dimensions_kernel_compute_D << < 1, block, 2 * k * sizeof(float) >> > (d_D, d_Z, k, d, l);
 }
 
 __global__
@@ -1691,11 +1729,13 @@ gpu_update_best_SAVE(int *d_M_idx, int *d_M_idx_best, float *d_cost,
                      bool *d_bad,
                      float min_deviation, int n, int k) {
 
-    gpu_update_best_kernel_is_best<<<1, 1 >>>(d_cost, d_cost_best, d_termination_criterion);
-    gpu_update_best_kernel_init_k_pre<<<1, k >>>(d_M_idx, d_M_idx_best, d_termination_criterion, d_M_best,
-                                                 d_M_current, d_bad, k);
-    gpu_update_best_kernel_C<<<k, BLOCK_SIZE >>>(d_C_best, d_C_sizes_best, d_C, d_C_sizes, d_termination_criterion, n);
-    gpu_update_best_kernel_find_bad<<<1, k >>>(d_C_sizes_best, d_termination_criterion, d_bad, k, n, min_deviation);
+    gpu_update_best_kernel_is_best << < 1, 1 >> > (d_cost, d_cost_best, d_termination_criterion);
+    gpu_update_best_kernel_init_k_pre << < 1, k >> > (d_M_idx, d_M_idx_best, d_termination_criterion, d_M_best,
+            d_M_current, d_bad, k);
+    gpu_update_best_kernel_C << < k, BLOCK_SIZE >> >
+                                     (d_C_best, d_C_sizes_best, d_C, d_C_sizes, d_termination_criterion, n);
+    gpu_update_best_kernel_find_bad << < 1, k >> >
+                                            (d_C_sizes_best, d_termination_criterion, d_bad, k, n, min_deviation);
 
 }
 
@@ -1751,7 +1791,7 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
     //initializing random generator for cuda
     curandState *d_state;
     cudaMalloc(&d_state, BLOCK_SIZE * sizeof(curandState));
-    init_seed<<<1, BLOCK_SIZE>>>(d_state, 42);
+    init_seed << < 1, BLOCK_SIZE >> > (d_state, 42);
 
     int *d_state_fixed;
     if (debug) {
@@ -1992,7 +2032,7 @@ GPU_PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, flo
     //initializing random generator for cuda
     curandState *d_state;
     cudaMalloc(&d_state, BLOCK_SIZE * sizeof(curandState));
-    init_seed<<<1, BLOCK_SIZE>>>(d_state, 42);
+    init_seed << < 1, BLOCK_SIZE >> > (d_state, 42);
 
     //initializing cuda arrays
     bool *d_bad = device_allocate_bool(k_max);
