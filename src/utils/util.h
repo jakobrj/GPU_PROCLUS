@@ -74,6 +74,8 @@ void print_array(int *x, int n);
 
 void print_array(bool *x, int n);
 
+void print_array(int **X, int n, int m);
+
 void print_array(float **X, int n, int m);
 
 void print_array(bool **X, int n, int m);

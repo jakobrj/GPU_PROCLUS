@@ -412,6 +412,11 @@ void gpu_find_dimensions(bool *d_D, float *d_Z, float *d_X,
 
     gpu_find_dimensions_kernel_Z << < k, d >> > (d_Z, d_X, k, d);
 
+//    printf("Z: \n");
+//    for (int i = 0; i < k; i++) {
+//        print_array_gpu(&d_Z[i * d], d);
+//    }
+
     //compute D
     set_all << < number_of_blocks, min(k * d, BLOCK_SIZE) >> > (d_D, false, k * d);
     dim3 block(min(32, k), min(32, d));
@@ -808,6 +813,7 @@ GPU_PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation
     cudaDeviceSynchronize();
 //    cudaProfilerStart();
 
+
     //getting constants
     int n = data.size(0);
     int d = data.size(1);
@@ -893,6 +899,7 @@ GPU_PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation
     set(d_cost_best, 0, 1000000.);
 
     while (termination_criterion < termination_rounds) {
+        printf("\n\n--------------\n");
 
         //// compute L ////
         gpu_compute_L(d_L, d_L_sizes,
@@ -966,6 +973,7 @@ GPU_PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation
         }
         gpu_replace_medoids_kernel << < 1, 1 >> > (d_M_current, d_M_random, d_M, d_M_best, d_bad, k);
 
+        printf("\n--------------\n\n");
     }
 
     //// Refinement Phase ////
@@ -1218,7 +1226,7 @@ void gpu_replace_medoids_kernel_Keep(int *d_M_bad, int *d_num_bad, int *d_M_curr
     int l = 0;
     for (int i = 0; i < k; i++) {
         if (d_bad[i]) {
-            d_M_bad[l] = i;
+            d_M_bad[l] = i;//todo explain why this is needed in the GPU version
             l++;
 
             bool is_in = true;
@@ -1248,7 +1256,7 @@ void gpu_replace_medoids_kernel_keep_reset(int *d_L_sizes, float *d_delta_old, f
     int j = threadIdx.x;
 
     d_L_sizes[i] = 0;
-    d_delta_old[i] = 0.;
+    d_delta_old[i] = 0.;//todo should not be zero but -1!!!!
     d_H[i * d + j] = 0.;
 }
 

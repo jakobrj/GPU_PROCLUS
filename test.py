@@ -8,12 +8,12 @@ from mpl_toolkits.mplot3d import Axes3D
 # X = load_glass()
 # X = load_vowel()
 # X = load_pendigits()
-X = load_iris()[:,:4]
+X = load_iris()[:, :4]
 # X = load_synt(20, 10000, 20, 0)
 
-#X = load_synt_gauss(n=n, d=d, cl=cl, re=0, cl_d=dims_pr_cl, std=std)
+# X = load_synt_gauss(n=n, d=d, cl=cl, re=0, cl_d=dims_pr_cl, std=std)
 
-n = X.shape[0]   # 100_000
+n = X.shape[0]  # 100_000
 d = X.shape[1]
 cl = 3
 std = 5
@@ -26,8 +26,7 @@ b = 4
 min_deviation = 0.7
 termination_rounds = 5
 
-rounds = 10
-
+rounds = 1
 
 torch.cuda.synchronize()
 
@@ -104,9 +103,25 @@ if experiment == "CPU":
     gpu_avg_time /= rounds
     print("avg time: %.4fs" % gpu_avg_time)
 
-
 if experiment == "CPU_S":
     rs = PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=True)
+
+if experiment == "CPU_KEEP_S":
+    rs = PROCLUS_KEEP(X, k, l, a, b, min_deviation, termination_rounds, debug=True)
+
+if experiment == "CPU_SAVE_S":
+    rs = PROCLUS_SAVE(X, k, l, a, b, min_deviation, termination_rounds, debug=True)
+
+if experiment == "CPU_PARAM":
+    gpu_avg_time = 0
+    for _ in range(rounds):
+        print("CPU_PARAM", _)
+        # X = load_synt_gauss(n=n, d=d, cl=cl, std=std, re=round, cl_d=dims_pr_cl)
+        t0 = time.time()
+        rs = PROCLUS_PARAM(X, ks, ls, a, b, min_deviation, termination_rounds, debug=True)
+        gpu_avg_time += time.time() - t0
+    gpu_avg_time /= rounds
+    print("avg time: %.4fs" % gpu_avg_time)
 
 if experiment == "PARAM":
     rs = GPU_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds)

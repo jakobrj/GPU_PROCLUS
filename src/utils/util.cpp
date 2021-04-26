@@ -402,6 +402,26 @@ void print_array(bool *x, int n) {
     printf("\n");
 }
 
+void print_array(int **X, int n, int m) {
+    int left = 30;
+    int right = 30;
+
+    if (n <= left + right) {
+        for (int i = 0; i < n; i++) {
+            print_array(X[i], m);
+        }
+    } else {
+        for (int i = 0; i < left; i++) {
+            print_array(X[i], m);
+        }
+        printf(" ... \n");
+        for (int i = n - right; i < n; i++) {
+            print_array(X[i], m);
+        }
+    }
+    printf("\n");
+}
+
 void print_array(float **X, int n, int m) {
     int left = 30;
     int right = 30;
@@ -439,5 +459,5 @@ void print_array(bool **X, int n, int m) {
             print_array(X[i], m);
         }
     }
-    printf("\n");
+//    printf("\n");
 }
