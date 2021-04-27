@@ -103,6 +103,7 @@ impl = load(name="GPU_PROCLUS",
                 "src/algorithms/PROCLUS.cpp",
                 "src/algorithms/GPU_PROCLUS.cu",
                 "src/utils/util.cpp",
+                "src/utils/mem_util.cpp",
                 "src/utils/gpu_util.cu"
             ], extra_cuda_cflags=["-w"], extra_cflags=["-w"], with_cuda=True)
 

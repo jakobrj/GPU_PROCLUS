@@ -1,11 +1,12 @@
 #include <cstdio>
 #include "util.h"
+#include "mem_util.h"
 
 
 #define DEBUG false
 
 float *compute_l2_norm_to_medoid(float **S, int m_i, int n, int d) {
-    float *dist = new float[n];
+    float *dist = array_1d<float>(n);
 
     for (int i = 0; i < n; i++) {
         dist[i] = 0;
@@ -22,7 +23,7 @@ float *compute_l2_norm_to_medoid(float **S, int m_i, int n, int d) {
 
 float *compute_l2_norm_to_medoid(at::Tensor data, int *S, int m_i, int n, int d) {
 //    printf("compute_l2_norm_to_medoid before allocating, n=%d\n", n);
-    float *dist = new float[n];
+    float *dist = array_1d<float>(n);
 //    printf("compute_l2_norm_to_medoid after allocating\n");
     float *x_m_i = data[m_i].data_ptr<float>();
     for (int i = 0; i < n; i++) {
@@ -41,9 +42,6 @@ float *compute_l2_norm_to_medoid(at::Tensor data, int *S, int m_i, int n, int d)
 }
 
 void compute_l2_norm_to_medoid(float *dist, at::Tensor data, int *S, int m_i, int n, int d) {
-//    printf("compute_l2_norm_to_medoid before allocating, n=%d\n", n);
-//    float *dist = new float[n];
-//    printf("compute_l2_norm_to_medoid after allocating\n");
     float *x_m_i = data[m_i].data_ptr<float>();
     for (int i = 0; i < n; i++) {
         float *x_S_i = data[S[i]].data_ptr<float>();
@@ -62,7 +60,7 @@ void compute_l2_norm_to_medoid(float *dist, at::Tensor data, int *S, int m_i, in
 
 
 float *compute_l2_norm_to_medoid(at::Tensor data, int m_i, int n, int d) {
-    float *dist = new float[n];
+    float *dist = array_1d<float>(n);
 
     float *x_m_i = data[m_i].data_ptr<float>();
     for (int i = 0; i < n; i++) {
@@ -94,7 +92,7 @@ void compute_l2_norm_to_medoid(float *dist, at::Tensor data, int m_i, int n, int
 }
 
 float *compute_l1_norm_to_medoid(float **S, int m_i, bool *D_i, int n, int d) {
-    float *dist = new float[n];
+    float *dist = array_1d<float>(n);
 
     for (int i = 0; i < n; i++) {
         dist[i] = 0;
@@ -114,7 +112,7 @@ float *compute_l1_norm_to_medoid(float **S, int m_i, bool *D_i, int n, int d) {
 
 
 float *compute_l1_norm_to_medoid(at::Tensor data, int m_i, bool *D_i, int n, int d) {
-    float *dist = new float[n];
+    float *dist = array_1d<float>(n);
 
     float *data_m_i = data[m_i].data_ptr<float>();
 
@@ -219,7 +217,7 @@ int *shuffle(int *indices, int n) {
 
     //print_debug("shuffle - start\n", DEBUG);
 
-    int *a = new int[n];
+    int *a = array_1d<int>(n);
     for (int i = 0; i < n; i++) {
         a[i] = indices[i];
     }
@@ -257,56 +255,6 @@ int *not_random_sample(int *in, int *state, int state_length, int k, int n) {
     return in;
 }
 
-
-template<typename T>
-T **array_2d(int n, int m) {
-    T **S = new T *[n];
-    for (int i = 0; i < n; i++) {
-        T *S_i = new T[m];
-        S[i] = S_i;
-    }
-    return S;
-}
-
-template int **array_2d<int>(int n, int m);
-
-template bool **array_2d<bool>(int n, int m);
-
-template float **array_2d<float>(int n, int m);
-
-template<typename T>
-T **zeros_2d(int n, int m) {
-    T **S = new T *[n];
-    for (int i = 0; i < n; i++) {
-        S[i] = new T[m];
-        for (int j = 0; j < m; j++) {
-            S[i][j] = 0;
-        }
-    }
-    return S;
-}
-
-template int **zeros_2d<int>(int n, int m);
-
-template bool **zeros_2d<bool>(int n, int m);
-
-template float **zeros_2d<float>(int n, int m);
-
-template<typename T>
-T *zeros_1d(int n) {
-    T *S = new T[n];
-    for (int i = 0; i < n; i++) {
-        S[i] = 0;
-    }
-    return S;
-}
-
-template int *zeros_1d<int>(int n);
-
-template bool *zeros_1d<bool>(int n);
-
-template float *zeros_1d<float>(int n);
-
 float **gather_2d(float **S, int *indices, int k, int d) {
     float **R = array_2d<float>(k, d);
     for (int i = 0; i < k; i++) {
@@ -327,14 +275,6 @@ float **gather_2d(at::Tensor S, int *indices, int k, int d) {
         }
     }
     return R;
-}
-
-int *fill_with_indices(int n) {
-    int *h_S = new int[n];
-    for (int p = 0; p < n; p++) {
-        h_S[p] = p;
-    }
-    return h_S;
 }
 
 void print_debug(char *str, bool debug) {

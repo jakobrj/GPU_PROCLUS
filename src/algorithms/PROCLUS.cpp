@@ -1,5 +1,6 @@
 #include "PROCLUS.h"
 #include "../utils/util.h"
+#include "../utils/mem_util.h"
 #include <numeric>
 #include <cassert>
 #include <time.h>
@@ -42,9 +43,9 @@ bool **find_dimensions(at::Tensor data, int **L, int *L_sizes, int *M, int k, in
 
     float **X = array_2d<float>(k, d);
     float **Z = array_2d<float>(k, d);
-    float *Y = new float[k];
+    float *Y = array_1d<float>(k);
     bool **D = zeros_2d<bool>(k, d);
-    float *sigma = new float[k];
+    float *sigma = array_1d<float>(k);
 
 
     //compute X,Y,Z
@@ -116,21 +117,16 @@ bool **find_dimensions(at::Tensor data, int **L, int *L_sizes, int *M, int k, in
         D[i][j] = true;
     }
 
-
-    for (int i = 0; i < k; i++) {
-        delete X[i];
-        delete Z[i];
-    }
-    delete X;
-    delete Y;
-    delete Z;
-    delete sigma;
+    free(X, k);
+    free(Z, k);
+    free(Y);
+    free(sigma);
 
     return D;
 }
 
 int *assign_points(at::Tensor data, bool **D, int *M, int n, int d, int k) {
-    int *C = new int[n];
+    int *C = array_1d<int>(n);
     float **dist = array_2d<float>(n, k);
     for (int i = 0; i < k; i++) {
 
@@ -138,7 +134,7 @@ int *assign_points(at::Tensor data, bool **D, int *M, int n, int d, int k) {
         for (int j = 0; j < n; j++) {
             dist[j][i] = tmp_dist[j];
         }
-        delete tmp_dist;
+        free(tmp_dist);
     }
 
     for (int p = 0; p < n; p++) {
@@ -150,10 +146,7 @@ int *assign_points(at::Tensor data, bool **D, int *M, int n, int d, int k) {
         C[M[i]] = i;
     }
 
-    for (int j = 0; j < n; j++) {
-        delete dist[j];
-    }
-    delete dist;
+    free(dist, n);
 
     return C;
 }
@@ -161,7 +154,7 @@ int *assign_points(at::Tensor data, bool **D, int *M, int n, int d, int k) {
 
 float evaluate_cluster(at::Tensor data, bool **D, int *C, int n, int d, int k) {
     float **Y = zeros_2d<float>(k, d);
-    float *w = new float[k];
+    float *w = array_1d<float>(k);
 
     float **means = zeros_2d<float>(k, d);
     int *counts = zeros_1d<int>(k);
@@ -216,14 +209,10 @@ float evaluate_cluster(at::Tensor data, bool **D, int *C, int n, int d, int k) {
         sum += counts[i] * w[i];
     }
 
-    for (int i = 0; i < k; i++) {
-        delete Y[i];
-        delete means[i];
-    }
-    delete Y;
-    delete w;
-    delete means;
-    delete counts;
+    free(Y, k);
+    free(w);
+    free(means, k);
+    free(counts);
 
     return sum / n;
 }
@@ -246,16 +235,16 @@ bool *bad_medoids(int *C, int k, float min_deviation, int n) {
         }
     }
 
-    delete sizes;
+    free(sizes);
 
     return bad;
 }
 
 int *
-replace_medoids(int *M, int M_length, int *M_best, bool *bad, int *state_fixed, int state_length, int k, bool debug) {
-    int *M_kept = new int[k];
+replace_medoids(int *M, int M_length, int *M_best, bool *bad, int *M_random, int *state_fixed, int state_length, int k,
+                bool debug) {
+    int *M_kept = array_1d<int>(k);
 
-    int *M_random = fill_with_indices(M_length);
     if (debug) {
         M_random = not_random_sample(M_random, state_fixed, state_length, k, M_length);
         //todo - this is why we dont get the same fixed random medoids
@@ -263,7 +252,7 @@ replace_medoids(int *M, int M_length, int *M_best, bool *bad, int *state_fixed, 
         M_random = random_sample(M_random, k, M_length);
     }
 
-    int *M_current = new int[k];
+    int *M_current = array_1d<int>(k);
 
     int j = 0;
     for (int i = 0; i < k; i++) {
@@ -296,13 +285,13 @@ replace_medoids(int *M, int M_length, int *M_best, bool *bad, int *state_fixed, 
         }
     }
 
-//    delete M_random;
+    free(M_kept);
 
     return M_current;
 }
 
 void remove_outliers(at::Tensor data, int *C, bool **D, int *M, int n, int k, int d) {
-    float *delta = new float[k];
+    float *delta = array_1d<float>(k);
 
     for (int i = 0; i < k; i++) {
         delta[i] = 1000000.;//todo not nice
@@ -332,7 +321,7 @@ void remove_outliers(at::Tensor data, int *C, bool **D, int *M, int n, int k, in
             C[p] = -1;
         }
     }
-    delete delta;
+    free(delta);
 }
 
 std::vector <at::Tensor>
@@ -352,7 +341,7 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
         state_fixed = fill_with_indices(state_length);
     }
 
-    int *indices = new int[n];
+    int *indices = array_1d<int>(n);
     for (int i = 0; i < n; i++) {
         indices[i] = i;
     }
@@ -369,11 +358,12 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
         print_array(S, Ak);
     }
 
-    float *dist = new float[n];
-    float *new_dist = new float[n];
-    int *M = new int[Bk];
+    float *dist = array_1d<float>(n);
+    float *new_dist = array_1d<float>(n);
+    int *M = array_1d<int>(Bk);
     greedy(M, dist, new_dist, data, S, Bk, Ak, d);
-    delete S;
+    free(S);
+    free(new_dist);
 
     if (debug) {
         printf("M:\n");
@@ -382,12 +372,10 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
 
     // Iterative Phase
     float best_objective = std::numeric_limits<float>::max();
-    int *M_current = new int[k];
+    int *M_current = array_1d<int>(k);
 
-    indices = new int[Bk];
-    for (int i = 0; i < Bk; i++) {
-        indices[i] = i;
-    }
+    indices = fill_with_indices(Bk);
+
     int *M_random;
     if (debug) {
         M_random = not_random_sample(indices, state_fixed, state_length, k, Bk);
@@ -401,15 +389,12 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
     }
 
     int termination_criterion = 0;
-    int *M_best = M_current;
-    int *C_best;
-    bool *bad;
+    int *M_best = nullptr;
+    int *C_best = nullptr;
+    bool *bad = nullptr;
 
-    int **L = new int *[k];
-    for (int i = 0; i < k; i++) {
-        L[i] = new int[n];
-    }
-    int *L_sizes = new int[k];
+    int **L = array_2d<int>(k, n);
+    int *L_sizes = array_1d<int>(k);
 
     while (termination_criterion < termination_rounds) {
 
@@ -444,10 +429,6 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
             print_array(L_sizes, k);
             printf("L:\n");
             print_array(L, k, n);
-//            printf("d_delta: ");
-//            print_array_gpu(d_delta, k);
-//            printf("d_termination_criterion: ");
-//            print_array_gpu(d_termination_criterion, 1);
             std::vector <std::vector<int>> v_C;
             for (int i = 0; i < n; i++) {
                 int c_id = C[i];
@@ -474,25 +455,29 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
         }
 
 
-        for (int i = 0; i < k; i++) {
-            delete D[i];
-        }
-        delete D;
+        free(D, k);
+
         if (objective_function < best_objective) {
             termination_criterion = 0;
             best_objective = objective_function;
+            if (M_best != nullptr) {
+                free(M_best);
+            }
             M_best = M_current;
-
+            if (C_best != nullptr) {
+                free(C_best);
+            }
             C_best = C;
+            if (bad != nullptr) {
+                free(bad);
+            }
             bad = bad_medoids(C, k, min_deviation, n);
         } else {
-            delete C;
-            delete M_current;
+            free(C);
+            free(M_current);
         }
 
-        M_current = replace_medoids(M, Bk, M_best, bad, state_fixed, state_length, k, debug);
-
-
+        M_current = replace_medoids(M, Bk, M_best, bad, M_random, state_fixed, state_length, k, debug);
     }
 
     // Refinement Phase
@@ -510,7 +495,6 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
         L[cl][l_j[cl]] = i;
         l_j[cl] += 1;
     }
-    delete C_best;
 
     bool **D = find_dimensions(data, L, L_sizes, M_best, k, n, d, l);
 
@@ -540,22 +524,25 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
     }
     r.push_back(C_Tensor);
 
-
-    for (int i = 0; i < k; i++) {
-        delete L[i];
+    free(bad);
+    free(C);
+    free(C_best);
+    free(D, k);
+    free(dist);
+    free(L, k);
+    free(l_j);
+    free(L_sizes);
+    free(M);
+    free(M_best);
+    free(M_current);
+    free(M_random);
+    if (debug) {
+        free(state_fixed);
     }
-    delete L;
-    delete L_sizes;
-    delete C;
-    for (int i = 0; i < k; i++) {
-        delete D[i];
-    }
-    delete D;
-    delete M_best;
-    delete M_current;
-    delete M_random;
-    delete dist;
 
+    if (debug) {
+        printf("missing deletions %d\n", get_allocated_count());
+    }
     return r;
 }
 
@@ -567,9 +554,9 @@ find_dimensions_KEEP(at::Tensor data, float **H, int *lambda, bool *bad, int **D
     //print_debug("find_dimensions - start\n", DEBUG);
     float **X = array_2d<float>(k, d);
     float **Z = array_2d<float>(k, d);
-    float *Y = new float[k];
+    float *Y = array_1d<float>(k);
     bool **D = zeros_2d<bool>(k, d);
-    float *sigma = new float[k];
+    float *sigma = array_1d<float>(k);
 
     //print_debug("find_dimensions - init \n", DEBUG);
 
@@ -641,14 +628,10 @@ find_dimensions_KEEP(at::Tensor data, float **H, int *lambda, bool *bad, int **D
         D[i][j] = true;
     }
 
-    for (int i = 0; i < k; i++) {
-        delete X[i];
-        delete Z[i];
-    }
-    delete X;
-    delete Y;
-    delete Z;
-    delete sigma;
+    free(X, k);
+    free(Y);
+    free(Z, k);
+    free(sigma);
 
     return D;
 }
@@ -671,7 +654,7 @@ PROCLUS_KEEP(at::Tensor data, int k, int l, float a, float b, float min_deviatio
         state_fixed = fill_with_indices(state_length);
     }
 
-    int *indices = new int[n];
+    int *indices = array_1d<int>(n);
     for (int i = 0; i < n; i++) {
         indices[i] = i;
     }
@@ -688,11 +671,13 @@ PROCLUS_KEEP(at::Tensor data, int k, int l, float a, float b, float min_deviatio
         print_array(S, Ak);
     }
 
-    float *dist_tmp = new float[n];
-    float *new_dist_tmp = new float[n];
-    int *M = new int[Bk];
+    float *dist_tmp = array_1d<float>(n);
+    float *new_dist_tmp = array_1d<float>(n);
+    int *M = array_1d<int>(Bk);
     greedy(M, dist_tmp, new_dist_tmp, data, S, Bk, Ak, d);
-    delete S;
+    free(S);
+    free(dist_tmp);
+    free(new_dist_tmp);
 
     if (debug) {
         printf("M:\n");
@@ -701,9 +686,9 @@ PROCLUS_KEEP(at::Tensor data, int k, int l, float a, float b, float min_deviatio
 
     // Iterative Phase
     float best_objective = std::numeric_limits<float>::max();
-    int *M_current = new int[k];
+    int *M_current = array_1d<int>(k);
 
-    indices = new int[Bk];
+    indices = array_1d<int>(Bk);
     for (int i = 0; i < Bk; i++) {
         indices[i] = i;
     }
@@ -720,9 +705,9 @@ PROCLUS_KEEP(at::Tensor data, int k, int l, float a, float b, float min_deviatio
     }
 
     int termination_criterion = 0;
-    int *M_best = M_current;
-    int *C_best;
-    bool *bad = new bool[k];
+    int *M_best = nullptr;
+    int *C_best = nullptr;
+    bool *bad = array_1d<bool>(k);
     for (int i = 0; i < k; i++) {
         bad[i] = true;
     }
@@ -732,7 +717,7 @@ PROCLUS_KEEP(at::Tensor data, int k, int l, float a, float b, float min_deviatio
     int *Delta_L_sizes = zeros_1d<int>(k);
     int *L_sizes = zeros_1d<int>(k);
     float **H = zeros_2d<float>(k, d);
-    int *lambda = new int[k];
+    int *lambda = array_1d<int>(k);
     float *delta_prev = zeros_1d<float>(k);
 
     float **dist = zeros_2d<float>(k, n);
@@ -792,11 +777,6 @@ PROCLUS_KEEP(at::Tensor data, int k, int l, float a, float b, float min_deviatio
             print_array(L_sizes, k);
             printf("L:\n");
             print_array(Delta_L, k, n);
-
-//            printf("d_delta: ");
-//            print_array_gpu(d_delta, k);
-//            printf("d_termination_criterion: ");
-//            print_array_gpu(d_termination_criterion, 1);
             std::vector <std::vector<int>> v_C;
             for (int i = 0; i < n; i++) {
                 int c_id = C[i];
@@ -822,24 +802,29 @@ PROCLUS_KEEP(at::Tensor data, int k, int l, float a, float b, float min_deviatio
             printf("\n------------\n\n");
         }
 
+        free(D, k);
 
-        for (int i = 0; i < k; i++) {
-            delete D[i];
-        }
-        delete D;
         if (objective_function < best_objective) {
             termination_criterion = 0;
             best_objective = objective_function;
+            if (M_best != nullptr) {
+                free(M_best);
+            }
             M_best = M_current;
-
+            if (C_best != nullptr) {
+                free(C_best);
+            }
             C_best = C;
+            if (bad != nullptr) {
+                free(bad);
+            }
             bad = bad_medoids(C, k, min_deviation, n);
         } else {
-            delete C;
-            delete M_current;
+            free(C);
+            free(M_current);
         }
 
-        M_current = replace_medoids(M, Bk, M_best, bad, state_fixed, state_length, k, debug);
+        M_current = replace_medoids(M, Bk, M_best, bad, M_random, state_fixed, state_length, k, debug);
 
 
     }
@@ -859,7 +844,6 @@ PROCLUS_KEEP(at::Tensor data, int k, int l, float a, float b, float min_deviatio
         L[cl][l_j[cl]] = i;
         l_j[cl] += 1;
     }
-    delete C_best;
 
     bool **D = find_dimensions(data, L, L_sizes, M_best, k, n, d, l);
 
@@ -889,21 +873,30 @@ PROCLUS_KEEP(at::Tensor data, int k, int l, float a, float b, float min_deviatio
     }
     r.push_back(C_Tensor);
 
+    free(bad);
+    free(C);
+    free(C_best);
+    free(D, k);
+    free(H, k);
+    free(dist, k);
+    free(L, k);//and Delta_L is the same
+    free(Delta_L_sizes);
+    free(L_sizes);
+    free(l_j);
+    free(lambda);
+    free(delta_prev);
+    free(M);
+    free(M_best);
+    free(M_current);
+    free(M_random);
 
-    for (int i = 0; i < k; i++) {
-        delete L[i];
+    if (debug) {
+        free(state_fixed);
     }
-    delete L;
-    delete L_sizes;
-    delete C;
-    for (int i = 0; i < k; i++) {
-        delete D[i];
+
+    if (debug) {
+        printf("missing deletions %d\n", get_allocated_count());
     }
-    delete D;
-    delete M_best;
-    delete M_current;
-    delete M_random;
-    delete dist_tmp;
 
     return r;
 }
@@ -915,9 +908,9 @@ find_dimensions_SAVE(at::Tensor data, float **H, int *lambda, int *M_idx, int **
 
     float **X = array_2d<float>(k, d);
     float **Z = array_2d<float>(k, d);
-    float *Y = new float[k];
+    float *Y = array_1d<float>(k);
     bool **D = zeros_2d<bool>(k, d);
-    float *sigma = new float[k];
+    float *sigma = array_1d<float>(k);
 
 
     //compute X,Y,Z
@@ -975,26 +968,22 @@ find_dimensions_SAVE(at::Tensor data, float **H, int *lambda, int *M_idx, int **
         D[i][j] = true;
     }
 
-    for (int i = 0; i < k; i++) {
-        delete X[i];
-        delete Z[i];
-    }
-    delete X;
-    delete Y;
-    delete Z;
-    delete sigma;
+    free(X, k);
+    free(Y);
+    free(Z, k);
+    free(sigma);
 
     return D;
 }
 
 
 int *
-replace_medoids_SAVE(int *M_idx, int *M_idx_best, int *M, int M_length, int *M_best, bool *bad, int *state_fixed,
+replace_medoids_SAVE(int *M_idx, int *M_idx_best, int *M, int M_length, int *M_best, bool *bad, int *M_random,
+                     int *state_fixed,
                      int state_length, int k,
                      bool debug) {
-    int *M_kept = new int[k];
+    int *M_kept = array_1d<int>(k);
 
-    int *M_random = fill_with_indices(M_length);
     if (debug) {
         M_random = not_random_sample(M_random, state_fixed, state_length, k, M_length);
         //todo - this is why we dont get the same fixed random medoids
@@ -1002,7 +991,7 @@ replace_medoids_SAVE(int *M_idx, int *M_idx_best, int *M, int M_length, int *M_b
         M_random = random_sample(M_random, k, M_length);
     }
 
-    int *M_current = new int[k];
+    int *M_current = array_1d<int>(k);
 
     int j = 0;
     for (int i = 0; i < k; i++) {
@@ -1036,8 +1025,7 @@ replace_medoids_SAVE(int *M_idx, int *M_idx_best, int *M, int M_length, int *M_b
             p += 1;
         }
     }
-
-//    delete M_random;
+    free(M_kept);
 
     return M_current;
 }
@@ -1061,7 +1049,7 @@ PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_deviatio
         state_fixed = fill_with_indices(state_length);
     }
 
-    int *indices = new int[n];
+    int *indices = array_1d<int>(n);
     for (int i = 0; i < n; i++) {
         indices[i] = i;
     }
@@ -1078,11 +1066,13 @@ PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_deviatio
         print_array(S, Ak);
     }
 
-    float *dist_tmp = new float[n];
-    float *new_dist_tmp = new float[n];
-    int *M = new int[Bk];
+    float *dist_tmp = array_1d<float>(n);
+    float *new_dist_tmp = array_1d<float>(n);
+    int *M = array_1d<int>(Bk);
     greedy(M, dist_tmp, new_dist_tmp, data, S, Bk, Ak, d);
-    delete S;
+    free(S);
+    free(dist_tmp);
+    free(new_dist_tmp);
 
     if (debug) {
         printf("M:\n");
@@ -1091,12 +1081,10 @@ PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_deviatio
 
     // Iterative Phase
     float best_objective = std::numeric_limits<float>::max();
-    int *M_current = new int[k];
+    int *M_current = array_1d<int>(k);
 
-    indices = new int[Bk];
-    for (int i = 0; i < Bk; i++) {
-        indices[i] = i;
-    }
+    indices = fill_with_indices(Bk);
+
     int *M_random;
     if (debug) {
         M_random = not_random_sample(indices, state_fixed, state_length, k, Bk);
@@ -1110,9 +1098,9 @@ PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_deviatio
     }
 
     int termination_criterion = 0;
-    int *M_best = M_current;
-    int *C_best;
-    bool *bad = new bool[k];
+    int *M_best = nullptr;
+    int *C_best = nullptr;
+    bool *bad = array_1d<bool>(k);
     for (int i = 0; i < k; i++) {
         bad[i] = true;
     }
@@ -1122,18 +1110,18 @@ PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_deviatio
     int *Delta_L_sizes = zeros_1d<int>(k);
     int *L_sizes = zeros_1d<int>(Bk);
     float **H = zeros_2d<float>(Bk, d);
-    int *lambda = new int[k];
-    float *delta_prev = new float[Bk];
+    int *lambda = array_1d<int>(k);
+    float *delta_prev = array_1d<float>(Bk);
     for (int i = 0; i < Bk; i++) {
         delta_prev[i] = -1.;
     }
 
-    bool *dist_found = new bool[Bk];
+    bool *dist_found = array_1d<bool>(Bk);
     for (int i = 0; i < Bk; i++) {
         dist_found[i] = false;
     }
-    int *M_idx = new int[k];
-    int *M_idx_best = new int[k];
+    int *M_idx = array_1d<int>(k);
+    int *M_idx_best = array_1d<int>(k);
     for (int i = 0; i < k; i++) {
         M_idx[i] = M_random[i];
         M_idx_best[i] = M_random[i];
@@ -1142,9 +1130,7 @@ PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_deviatio
 
     while (termination_criterion < termination_rounds) {
 
-
         termination_criterion += 1;
-
 
         /// compute L
         /// changed - start
@@ -1223,26 +1209,32 @@ PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_deviatio
         }
 
 
-        for (int i = 0; i < k; i++) {
-            delete D[i];
-        }
-        delete D;
+        free(D, k);
         if (objective_function < best_objective) {
             termination_criterion = 0;
             best_objective = objective_function;
+            if(M_best!= nullptr){
+                free(M_best);
+            }
             M_best = M_current;
             for (int i = 0; i < k; i++) {
                 M_idx_best[i] = M_idx[i];
             }
-
+            if(C_best!= nullptr){
+                free(C_best);
+            }
             C_best = C;
+            if(bad != nullptr){
+                free(bad);
+            }
             bad = bad_medoids(C, k, min_deviation, n);
         } else {
-            delete C;
-            delete M_current;
+            free(C);
+            free(M_current);
         }
 
-        M_current = replace_medoids_SAVE(M_idx, M_idx_best, M, Bk, M_best, bad, state_fixed, state_length, k, debug);
+        M_current = replace_medoids_SAVE(M_idx, M_idx_best, M, Bk, M_best, bad, M_random, state_fixed, state_length, k,
+                                         debug);
 
 
     }
@@ -1262,7 +1254,6 @@ PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_deviatio
         L[cl][l_j[cl]] = i;
         l_j[cl] += 1;
     }
-    delete C_best;
 
     bool **D = find_dimensions(data, L, L_sizes, M_best, k, n, d, l);
 
@@ -1292,21 +1283,33 @@ PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_deviatio
     }
     r.push_back(C_Tensor);
 
+    free(bad);
+    free(C);
+    free(C_best);
+    free(D, k);
+    free(H,Bk);
+    free(dist,Bk);
+    free(dist_found);
+    free(L, k);
+    free(Delta_L_sizes);
+    free(L_sizes);
+    free(l_j);
+    free(lambda);
+    free(delta_prev);
+    free(M);
+    free(M_idx_best);
+    free(M_idx);
+    free(M_best);
+    free(M_current);
+    free(M_random);
 
-    for (int i = 0; i < k; i++) {
-        delete L[i];
+    if (debug) {
+        free(state_fixed);
     }
-    delete L;
-    delete L_sizes;
-    delete C;
-    for (int i = 0; i < k; i++) {
-        delete D[i];
+
+    if (debug) {
+        printf("missing deletions %d\n", get_allocated_count());
     }
-    delete D;
-    delete M_best;
-    delete M_current;
-    delete M_random;
-    delete dist_tmp;
 
     return r;
 }
@@ -1332,28 +1335,28 @@ PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a
         state_fixed = fill_with_indices(state_length);
     }
 
-    int *indices = new int[n];
-    for (int i = 0; i < n; i++) {
-        indices[i] = i;
-    }
+    int *indices = fill_with_indices(n);
 
-    int *S;
+    int *S;//S is the same as indices
     if (debug) {
         S = not_random_sample(indices, state_fixed, state_length, Ak, n);
     } else {
         S = random_sample(indices, Ak, n);
     }
 
+
     if (debug) {
         printf("S:\n");
         print_array(S, Ak);
     }
 
-    float *dist_tmp = new float[n];
-    float *new_dist_tmp = new float[n];
-    int *M = new int[Bk];
+    float *dist_tmp = array_1d<float>(n);
+    float *new_dist_tmp = array_1d<float>(n);
+    int *M = array_1d<int>(Bk);
     greedy(M, dist_tmp, new_dist_tmp, data, S, Bk, Ak, d);
-    delete S;
+    free(S);
+    free(dist_tmp);
+    free(new_dist_tmp);
 
     if (debug) {
         printf("M:\n");
@@ -1362,12 +1365,9 @@ PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a
 
     // Iterative Phase
     float best_objective = std::numeric_limits<float>::max();
-    int *M_current = new int[k_max];
+    int *M_current = array_1d<int>(k_max);
 
-    indices = new int[Bk];
-    for (int i = 0; i < Bk; i++) {
-        indices[i] = i;
-    }
+    indices = fill_with_indices(Bk);
     int *M_random;
     if (debug) {
         M_random = not_random_sample(indices, state_fixed, state_length, k_max, Bk);
@@ -1381,9 +1381,9 @@ PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a
     }
 
     int termination_criterion = 0;
-    int *M_best = M_current;
-    int *C_best;
-    bool *bad = new bool[k_max];
+    int *M_best = nullptr;
+    int *C_best = nullptr;
+    bool *bad = array_1d<bool>(k_max);
     for (int i = 0; i < k_max; i++) {
         bad[i] = true;
     }
@@ -1392,8 +1392,8 @@ PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a
     int *Delta_L_sizes = zeros_1d<int>(k_max);
     int *L_sizes = zeros_1d<int>(Bk);
     float **H = zeros_2d<float>(Bk, d);
-    int *lambda = new int[k_max];
-    float *delta_prev = new float[Bk];
+    int *lambda = array_1d<int>(k_max);
+    float *delta_prev = array_1d<float>(Bk);
     for (int i = 0; i < Bk; i++) {
         delta_prev[i] = -1.;
     }
@@ -1402,12 +1402,12 @@ PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a
     int *r_L_sizes = zeros_1d<int>(k_max);
 
 
-    bool *dist_found = new bool[Bk];
+    bool *dist_found = array_1d<bool>(Bk);
     for (int i = 0; i < Bk; i++) {
         dist_found[i] = false;
     }
-    int *M_idx = new int[k_max];
-    int *M_idx_best = new int[k_max];
+    int *M_idx = array_1d<int>(k_max);
+    int *M_idx_best = array_1d<int>(k_max);
     for (int i = 0; i < k_max; i++) {
         M_idx[i] = M_random[i];
         M_idx_best[i] = M_random[i];
@@ -1450,7 +1450,6 @@ PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a
                     printf("compute L\n");
                 }
 
-                /// changed - start
                 for (int i = 0; i < k; i++) {
                     if (!dist_found[M_idx[i]]) {
                         int m_i = M_current[i];
@@ -1481,11 +1480,8 @@ PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a
                     lambda[i] = delta_prev[M_idx[i]] < delta_i ? 1 : -1;
                     delta_prev[M_idx[i]] = delta_i;
                     Delta_L_sizes[i] = j;
-                    printf("before L_sizes[M_idx[i]]:%d\n", L_sizes[M_idx[i]]);
                     L_sizes[M_idx[i]] += lambda[i] * j;
-                    printf("after L_sizes[M_idx[i]]:%d\n", L_sizes[M_idx[i]]);
                 }
-                ///changed - end
 
                 if (debug) {
                     printf("\n\n------------\n");
@@ -1543,28 +1539,31 @@ PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a
                     printf("\n------------\n\n");
                 }
 
+                free(D, k);
 
-                for (int i = 0; i < k; i++) {
-                    delete D[i];
-                }
-                delete D;
                 if (objective_function < best_objective) {
                     termination_criterion = 0;
                     best_objective = objective_function;
+                    if(M_best != nullptr){
+                        free(M_best);
+                    }
                     M_best = M_current;
                     for (int i = 0; i < k; i++) {
                         M_idx_best[i] = M_idx[i];
                     }
-
+                    if (C_best != nullptr) {
+                        free(C_best);
+                    }
                     C_best = C;
+                    free(bad);
                     bad = bad_medoids(C, k, min_deviation, n);
                 } else {
-                    delete C;
-                    delete M_current;
+                    free(C);
+                    free(M_current);
                 }
 
-                M_current = replace_medoids_SAVE(M_idx, M_idx_best, M, Bk, M_best, bad, state_fixed, state_length, k,
-                                                 debug);
+                M_current = replace_medoids_SAVE(M_idx, M_idx_best, M, Bk, M_best, bad, M_random, state_fixed,
+                                                 state_length, k, debug);
 
 
             }
@@ -1585,7 +1584,6 @@ PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a
                 r_L[cl][l_j[cl]] = i;
                 l_j[cl] += 1;
             }
-//            delete C_best;
 
             bool **D = find_dimensions(data, r_L, r_L_sizes, M_best, k, n, d, l);
 
@@ -1616,25 +1614,38 @@ PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a
             r.push_back(C_Tensor);
 
             R.push_back(r);
+            free(C);
+            free(D, k);
+            free(l_j);
         }
     }
 
+    free(bad);
+    free(C_best);
+    free(H,Bk);
+    free(dist,Bk);
+    free(dist_found);
+    free(Delta_L, k_max);
+    free(Delta_L_sizes);
+    free(L_sizes);
+    free(r_L, k_max);
+    free(r_L_sizes);
+    free(lambda);
+    free(delta_prev);
+    free(M);
+    free(M_idx_best);
+    free(M_idx);
+    free(M_best);
+    free(M_current);
+    free(M_random);
 
-    for (int i = 0; i < k_max; i++) {
-        delete Delta_L[i];
+    if (debug) {
+        free(state_fixed);
     }
-    delete Delta_L;
-    delete Delta_L_sizes;
-    delete L_sizes;
-//    delete C;
-//    for (int i = 0; i < k_max; i++) {
-//        delete D[i];
-//    }
-//    delete D;
-    delete M_best;
-    delete M_current;
-    delete M_random;
-    delete dist_tmp;
+
+    if (debug) {
+        printf("missing deletions %d\n", get_allocated_count());
+    }
 
     return R;
 }

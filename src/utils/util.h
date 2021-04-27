@@ -51,20 +51,9 @@ int *random_sample(int *indices, int k, int n);
 
 int *not_random_sample(int *in, int *state, int state_length, int k, int n);
 
-template<typename T>
-T **array_2d(int n, int m);
-
-template<typename T>
-T **zeros_2d(int n, int m);
-
-template<typename T>
-T *zeros_1d(int n);
-
 float **gather_2d(float **S, int *indices, int k, int d);
 
 float **gather_2d(at::Tensor S, int *indices, int k, int d);
-
-int *fill_with_indices(int n);
 
 void print_debug(char *str, bool debug);
 
