@@ -188,7 +188,7 @@ void gpu_compute_L_kernel_compute_delta_V2(float *d_delta, float *d_dist_n_k, in
         for (int j = 0; j < k; j++) {
             int p = d_M_current[j];
             if (i != j) {
-                if (d_dist_n_k[i * n + p] < d_delta[i]) {
+                if (d_dist_n_k[i * n + p] <= d_delta[i]) {
                     d_delta[i] = d_dist_n_k[i * n + p];
                 }
             }
@@ -200,7 +200,7 @@ __global__
 void gpu_compute_L_kernel_compute_L_V2(int *d_L, int *d_L_sizes, float *d_delta, float *d_dist_n_k, int n, int k) {
     for (int i = blockIdx.x; i < k; i += gridDim.x) {//independent
         for (int p = threadIdx.x; p < n; p += blockDim.x) {
-            if (d_dist_n_k[i * n + p] < d_delta[i]) {
+            if (d_dist_n_k[i * n + p] <= d_delta[i]) {
                 int old_size = atomicInc((unsigned int *) &d_L_sizes[i], n);
                 d_L[i * n + old_size] = p;
             }
@@ -412,10 +412,9 @@ void gpu_find_dimensions(bool *d_D, float *d_Z, float *d_X,
 
     gpu_find_dimensions_kernel_Z << < k, d >> > (d_Z, d_X, k, d);
 
-//    printf("Z: \n");
-//    for (int i = 0; i < k; i++) {
-//        print_array_gpu(&d_Z[i * d], d);
-//    }
+
+    printf("d_Z: \n");
+    print_array_gpu(d_Z, k * d);
 
     //compute D
     set_all << < number_of_blocks, min(k * d, BLOCK_SIZE) >> > (d_D, false, k * d);
@@ -899,7 +898,10 @@ GPU_PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation
     set(d_cost_best, 0, 1000000.);
 
     while (termination_criterion < termination_rounds) {
-        printf("\n\n--------------\n");
+
+        if (debug) {
+            printf("\n\n--------------\n");
+        }
 
         //// compute L ////
         gpu_compute_L(d_L, d_L_sizes,
@@ -958,6 +960,7 @@ GPU_PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation
         if (debug) {
             printf("d_bad: ");
             print_array_gpu(d_bad, k);
+            printf("\n--------------\n\n");
         }
 
         if (termination_criterion >= termination_rounds) {
@@ -973,7 +976,6 @@ GPU_PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation
         }
         gpu_replace_medoids_kernel << < 1, 1 >> > (d_M_current, d_M_random, d_M, d_M_best, d_bad, k);
 
-        printf("\n--------------\n\n");
     }
 
     //// Refinement Phase ////
@@ -1085,8 +1087,8 @@ void gpu_compute_L_kernel_KEEP_L(int *d_lambda, int *d_L, int *d_L_sizes, int *d
         if (threadIdx.x == 0)
             d_lambda[i] = -1;
         for (int p = threadIdx.x; p < n; p += blockDim.x) {
-            if (d_dist_n_k[i * n + p] < d_delta_old[i] &&
-                d_dist_n_k[i * n + p] >= d_delta[i]) {
+            if (d_dist_n_k[i * n + p] <= d_delta_old[i] &&
+                d_dist_n_k[i * n + p] > d_delta[i]) {
                 int idx = atomicInc((unsigned int *) &d_L_sizes_change[i], n);
                 d_L[i * n + idx] = p;
             }
@@ -1200,6 +1202,10 @@ void gpu_find_dimensions_keep(bool *d_D, float *d_Z, float *d_X, float *d_H,
 
     gpu_find_dimensions_kernel_Z << < k, d >> > (d_Z, d_X, k, d);
 
+
+    printf("d_Z: \n");
+    print_array_gpu(d_Z, k * d);
+
     //compute D
     set_all << < number_of_blocks, min(k * d, BLOCK_SIZE) >> > (d_D, false, k * d);
     dim3 block(min(32, k), min(32, d));
@@ -1256,7 +1262,7 @@ void gpu_replace_medoids_kernel_keep_reset(int *d_L_sizes, float *d_delta_old, f
     int j = threadIdx.x;
 
     d_L_sizes[i] = 0;
-    d_delta_old[i] = 0.;//todo should not be zero but -1!!!!
+    d_delta_old[i] = -1.;
     d_H[i * d + j] = 0.;
 }
 
@@ -1301,7 +1307,7 @@ GPU_PROCLUS_KEEP(at::Tensor data, int k, int l, float a, float b, float min_devi
     int *d_Ds = device_allocate_int(k * d);
     int *d_D_sizes = device_allocate_int(k);
     float *d_delta = device_allocate_float(k);
-    float *d_delta_old = device_allocate_float_zero(k);
+    float *d_delta_old = device_allocate_float(k);
     float *d_dist_n_k = device_allocate_float_zero(n * k);
     float *d_H = device_allocate_float_zero(k * d);
     int *d_L = device_allocate_int(n * k);
@@ -1346,7 +1352,14 @@ GPU_PROCLUS_KEEP(at::Tensor data, int k, int l, float a, float b, float min_devi
     int termination_criterion = 0;
     set(d_cost_best, 0, 1000000.);
 
+    int number_of_blocks = k / BLOCK_SIZE;
+    if (k % BLOCK_SIZE) number_of_blocks++;
+    set_all << < number_of_blocks, min(k, BLOCK_SIZE) >> > (d_delta_old, -1., k);
+
     while (termination_criterion < termination_rounds) {
+        if (debug) {
+            printf("\n\n--------------\n");
+        }
 
         //// compute L ////
         gpu_compute_L_keep(d_L, d_L_sizes_change, d_L_sizes, d_lambda,
@@ -1389,6 +1402,7 @@ GPU_PROCLUS_KEEP(at::Tensor data, int k, int l, float a, float b, float min_devi
             print_array_gpu(d_cost, 1);
             printf("d_M_current: ");
             print_array_gpu(d_M_current, k);
+            printf("\n--------------\n\n");
         }
 
         //// update best ////
@@ -1563,8 +1577,8 @@ gpu_compute_L_kernel_compute_L_pre(int *d_posneg, int *d_M_idx, int *d_L, int *d
             if (threadIdx.x == 0)
                 d_posneg[i] = -1;
             for (int p = threadIdx.x; p < n; p += blockDim.x) {
-                if (d_dist_n_Bk[d_M_idx[i] * n + p] < d_old_delta[d_M_idx[i]] &&
-                    d_dist_n_Bk[d_M_idx[i] * n + p] >= d_delta[i]) {
+                if (d_dist_n_Bk[d_M_idx[i] * n + p] <= d_old_delta[d_M_idx[i]] &&
+                    d_dist_n_Bk[d_M_idx[i] * n + p] > d_delta[i]) {
                     int old_size = atomicInc((unsigned int *) &d_L_sizes_change[i], n);
                     d_L[i * n + old_size] = p;
                 }
@@ -1684,7 +1698,6 @@ void gpu_find_dimensions_save(bool *d_D, float *d_Z, float *d_X, float *d_H,
 
     int number_of_blocks = (k * d) / BLOCK_SIZE;
     if ((k * d) % BLOCK_SIZE) number_of_blocks++;
-
     set_all << < number_of_blocks, min(k * d, BLOCK_SIZE) >> > (d_X, 0, k * d);
 
 
@@ -1820,7 +1833,7 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
     int *d_Ds = device_allocate_int(k * d);
     int *d_D_sizes = device_allocate_int(k);
     float *d_delta = device_allocate_float(k);
-    float *d_delta_old = device_allocate_float_zero(Bk);
+    float *d_delta_old = device_allocate_float(Bk);
     float *d_dist_n_Bk = device_allocate_float_zero(n * Bk);
     bool *d_dist_n_Bk_set = device_allocate_bool_zero(Bk);
     float *d_H = device_allocate_float_zero(Bk * d);
@@ -1865,6 +1878,10 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
 
     int termination_criterion = 0;
     set(d_cost_best, 0, 1000000.);
+
+    int number_of_blocks = Bk / BLOCK_SIZE;
+    if (Bk % BLOCK_SIZE) number_of_blocks++;
+    set_all << < number_of_blocks, min(Bk, BLOCK_SIZE) >> > (d_delta_old, -1., Bk);
 
     while (termination_criterion < termination_rounds) {
 
@@ -2087,6 +2104,10 @@ GPU_PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, flo
 
     gpu_gather_1d(d_M_current, d_M, d_M_random, k_max);
     cudaMemcpy(d_M_idx, d_M_random, k_max * sizeof(int), cudaMemcpyDeviceToDevice);
+
+    int number_of_blocks = Bk / BLOCK_SIZE;
+    if (Bk % BLOCK_SIZE) number_of_blocks++;
+    set_all << < number_of_blocks, min(Bk, BLOCK_SIZE) >> > (d_delta_old, -1., Bk);
 
     std::vector <std::vector<at::Tensor>> R;
 

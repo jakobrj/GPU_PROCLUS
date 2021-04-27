@@ -80,6 +80,7 @@ bool **find_dimensions(at::Tensor data, int **L, int *L_sizes, int *M, int k, in
         }
     }
 
+    printf("Z:\n");
     for (int i = 0; i < k; i++) {
 
         Y[i] = mean_1d(X[i], d);
@@ -98,6 +99,7 @@ bool **find_dimensions(at::Tensor data, int **L, int *L_sizes, int *M, int k, in
             else
                 Z[i][j] = (X[i][j] - Y[i]) / sigma[i];
         }
+        print_array(Z[i], d);
     }
 
     //# ensuring that we find atleast 2 for each and than the k*l #todo fast - sort first instead
@@ -398,8 +400,10 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
 
     while (termination_criterion < termination_rounds) {
 
+        if (debug) {
+            printf("\n\n------------\n");
+        }
 
-        termination_criterion += 1;
         for (int i = 0; i < k; i++) {
             int m_i = M_current[i];
             compute_l2_norm_to_medoid(dist, data, M_current, m_i, k, d);
@@ -424,7 +428,6 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
         float objective_function = evaluate_cluster(data, D, C, n, d, k);
 
         if (debug) {
-            printf("\n\n------------\n");
             printf("L_sizes: ");
             print_array(L_sizes, k);
             printf("L:\n");
@@ -451,12 +454,14 @@ PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, in
             printf("cost: %f\n", objective_function);
             printf("M_current: ");
             print_array(M_current, k);
+            printf("termination_criterion: %d\n", termination_criterion);
             printf("\n------------\n\n");
         }
 
 
         free(D, k);
 
+        termination_criterion += 1;
         if (objective_function < best_objective) {
             termination_criterion = 0;
             best_objective = objective_function;
@@ -1213,18 +1218,18 @@ PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_deviatio
         if (objective_function < best_objective) {
             termination_criterion = 0;
             best_objective = objective_function;
-            if(M_best!= nullptr){
+            if (M_best != nullptr) {
                 free(M_best);
             }
             M_best = M_current;
             for (int i = 0; i < k; i++) {
                 M_idx_best[i] = M_idx[i];
             }
-            if(C_best!= nullptr){
+            if (C_best != nullptr) {
                 free(C_best);
             }
             C_best = C;
-            if(bad != nullptr){
+            if (bad != nullptr) {
                 free(bad);
             }
             bad = bad_medoids(C, k, min_deviation, n);
@@ -1287,8 +1292,8 @@ PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_deviatio
     free(C);
     free(C_best);
     free(D, k);
-    free(H,Bk);
-    free(dist,Bk);
+    free(H, Bk);
+    free(dist, Bk);
     free(dist_found);
     free(L, k);
     free(Delta_L_sizes);
@@ -1544,7 +1549,7 @@ PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a
                 if (objective_function < best_objective) {
                     termination_criterion = 0;
                     best_objective = objective_function;
-                    if(M_best != nullptr){
+                    if (M_best != nullptr) {
                         free(M_best);
                     }
                     M_best = M_current;
@@ -1622,8 +1627,8 @@ PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a
 
     free(bad);
     free(C_best);
-    free(H,Bk);
-    free(dist,Bk);
+    free(H, Bk);
+    free(dist, Bk);
     free(dist_found);
     free(Delta_L, k_max);
     free(Delta_L_sizes);
