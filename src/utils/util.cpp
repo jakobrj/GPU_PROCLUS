@@ -382,6 +382,26 @@ void print_array(int *x, int n) {
     printf("\n");
 }
 
+void print_array(int *x, int *idx, int n) {
+    int left = 300;
+    int right = 300;
+
+    if (n <= left + right) {
+        for (int i = 0; i < n; i++) {
+            printf("%d ", x[idx[i]]);
+        }
+    } else {
+        for (int i = 0; i < left; i++) {
+            printf("%d ", x[idx[i]]);
+        }
+        printf(" ... ");
+        for (int i = n - right; i < n; i++) {
+            printf("%d ", x[idx[i]]);
+        }
+    }
+    printf("\n");
+}
+
 void print_array(bool *x, int n) {
     int left = 30;
     int right = 30;

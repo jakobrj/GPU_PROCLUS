@@ -25,7 +25,6 @@ float manhattan_segmental_distance(bool *D_i, at::Tensor data, int m_i, int m_j,
 
 void greedy(int *M, float *dist, float *new_dist, at::Tensor data, int *S, int Bk, int Ak, int d) {
 
-//    int *M = new int[Bk];
     int rnd_start = Ak / 2;//std::rand() % Ak
     M[0] = S[rnd_start];
     compute_l2_norm_to_medoid(dist, data, S, M[0], Ak, d);
@@ -920,7 +919,6 @@ find_dimensions_SAVE(at::Tensor data, float **H, int *lambda, int *M_idx, int **
     bool **D = zeros_2d<bool>(k, d);
     float *sigma = new float[k];
 
-    printf("test0\n");
 
     //compute X,Y,Z
     for (int i = 0; i < k; i++) {
@@ -933,14 +931,12 @@ find_dimensions_SAVE(at::Tensor data, float **H, int *lambda, int *M_idx, int **
             }
         }
     }
-    printf("test1\n");
 
     for (int i = 0; i < k; i++) {
         for (int j = 0; j < d; j++) {
             X[i][j] = H[M_idx[i]][j] / L_sizes[M_idx[i]];
         }
     }
-    printf("test2\n");
 
     for (int i = 0; i < k; i++) {
 
@@ -961,7 +957,6 @@ find_dimensions_SAVE(at::Tensor data, float **H, int *lambda, int *M_idx, int **
                 Z[i][j] = (X[i][j] - Y[i]) / sigma[i];
         }
     }
-    printf("test3\n");
 
     //# ensuring that we find atleast 2 for each and than the k*l #todo fast - sort first instead
     for (int i = 0; i < k; i++) {
@@ -971,17 +966,14 @@ find_dimensions_SAVE(at::Tensor data, float **H, int *lambda, int *M_idx, int **
             D[i][j] = true;
         }
     }
-    printf("test4\n");
 
     for (int _ = k * 2; _ < k * l; _++) {
         std::pair<int, int> *p_i_j = argmin_2d(Z, k, d);
         int i = p_i_j->first;
         int j = p_i_j->second;
-        printf("i:%d, j:%d\n", i, j);
         Z[i][j] = std::numeric_limits<float>::max();
         D[i][j] = true;
     }
-    printf("test5\n");
 
     for (int i = 0; i < k; i++) {
         delete X[i];
@@ -1397,7 +1389,6 @@ PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a
     }
 
     int **Delta_L = array_2d<int>(k_max, n);
-    int **L = Delta_L;
     int *Delta_L_sizes = zeros_1d<int>(k_max);
     int *L_sizes = zeros_1d<int>(Bk);
     float **H = zeros_2d<float>(Bk, d);
@@ -1406,6 +1397,10 @@ PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a
     for (int i = 0; i < Bk; i++) {
         delta_prev[i] = -1.;
     }
+
+    int **r_L = array_2d<int>(k_max, n);
+    int *r_L_sizes = zeros_1d<int>(k_max);
+
 
     bool *dist_found = new bool[Bk];
     for (int i = 0; i < Bk; i++) {
@@ -1457,7 +1452,7 @@ PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a
 
                 /// changed - start
                 for (int i = 0; i < k; i++) {
-                    if (!dist_found[M_idx[i]]) {///todo change
+                    if (!dist_found[M_idx[i]]) {
                         int m_i = M_current[i];
                         compute_l2_norm_to_medoid(dist[M_idx[i]], data, m_i, n, d);
                         dist_found[M_idx[i]] = true;
@@ -1486,14 +1481,19 @@ PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a
                     lambda[i] = delta_prev[M_idx[i]] < delta_i ? 1 : -1;
                     delta_prev[M_idx[i]] = delta_i;
                     Delta_L_sizes[i] = j;
+                    printf("before L_sizes[M_idx[i]]:%d\n", L_sizes[M_idx[i]]);
                     L_sizes[M_idx[i]] += lambda[i] * j;
+                    printf("after L_sizes[M_idx[i]]:%d\n", L_sizes[M_idx[i]]);
                 }
                 ///changed - end
 
                 if (debug) {
+                    printf("\n\n------------\n");
                     printf("find_dimensions_SAVE\n");
                     printf("Delta_L_sizes:");
                     print_array(Delta_L_sizes, k);
+                    printf("L_sizes:");
+                    print_array(L_sizes, M_idx, k);
                     printf("l: %d, k: %d\n", l, k);
                 }
                 bool **D = find_dimensions_SAVE(data, H, lambda, M_idx, Delta_L, Delta_L_sizes, L_sizes, M_current, k,
@@ -1509,7 +1509,6 @@ PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a
                 float objective_function = evaluate_cluster(data, D, C, n, d, k);
 
                 if (debug) {
-                    printf("\n\n------------\n");
                     printf("lambda:");
                     print_array(lambda, k);
                     printf("Delta_L_sizes: ");
@@ -1570,24 +1569,25 @@ PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a
 
             }
 
+
             // Refinement Phase
             for (int i = 0; i < k; i++) {
-                L_sizes[i] = 0;
+                r_L_sizes[i] = 0;
             }
 
             for (int p = 0; p < n; p++) {
-                L_sizes[C_best[p]] += 1;
+                r_L_sizes[C_best[p]] += 1;
             }
 
             int *l_j = zeros_1d<int>(k);
             for (int i = 0; i < n; i++) {
                 int cl = C_best[i];
-                L[cl][l_j[cl]] = i;
+                r_L[cl][l_j[cl]] = i;
                 l_j[cl] += 1;
             }
-            delete C_best;
+//            delete C_best;
 
-            bool **D = find_dimensions(data, L, L_sizes, M_best, k, n, d, l);
+            bool **D = find_dimensions(data, r_L, r_L_sizes, M_best, k, n, d, l);
 
             int *C = assign_points(data, D, M_best, n, d, k);
 
@@ -1621,9 +1621,10 @@ PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a
 
 
     for (int i = 0; i < k_max; i++) {
-        delete L[i];
+        delete Delta_L[i];
     }
-    delete L;
+    delete Delta_L;
+    delete Delta_L_sizes;
     delete L_sizes;
 //    delete C;
 //    for (int i = 0; i < k_max; i++) {

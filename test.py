@@ -118,7 +118,7 @@ if experiment == "CPU_PARAM":
         print("CPU_PARAM", _)
         # X = load_synt_gauss(n=n, d=d, cl=cl, std=std, re=round, cl_d=dims_pr_cl)
         t0 = time.time()
-        rs = PROCLUS_PARAM(X, ks, ls, a, b, min_deviation, termination_rounds, debug=True)
+        rs = PROCLUS_PARAM(X, ks, ls, a, b, min_deviation, termination_rounds, debug=False)
         gpu_avg_time += time.time() - t0
     gpu_avg_time /= rounds
     print("avg time: %.4fs" % gpu_avg_time)
