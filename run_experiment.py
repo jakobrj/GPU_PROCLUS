@@ -90,7 +90,7 @@ def run_param(algorithm, experiment, method, n, d, k, l, a, b, min_deviation, te
 
         GPU_PROCLUS(X_, 1, 1, 5, 4, min_deviation, termination_rounds)
         t0 = time.time()
-        if method == "GPU_PROCLUS_PARAM":
+        if method == "GPU-PROCLUS-PARAM" or method == "PROCLUS-PARAM":
             _ = algorithm(X, [k + 1, k, k - 1], [l + 1, l, l - 1], a, b, min_deviation, termination_rounds)
         else:
             for k_i in [k + 1, k, k - 1]:
@@ -165,7 +165,7 @@ def plot_speedup(to_plt, xs, x_label, experiment, y_max=None):
 
 def run_diff_n():
     n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    ns = [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000, 2048000, 4096000, 8192000]
+    ns = [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000]  # , 2048000, 4096000, 8192000]
 
     print("running experiment: inc_n")
 
@@ -176,9 +176,10 @@ def run_diff_n():
         os.makedirs('plots/')
 
     to_plt = []
-    for algo, algo_name in [(PROCLUS, "PROCLUS"), (GPU_PROCLUS, "GPU_PROCLUS"), (GPU_PROCLUS_KEEP, "GPU_PROCLUS_KEEP"),
-                            (GPU_PROCLUS_SAVE,
-                             "GPU_PROCLUS_SAVE")]:  # (GPU_PROCLUS_MMS, "GPU_PROCLUS_MMS"), (GPU_PROCLUS_MMB, "GPU_PROCLUS_MMB")]: #, (GPU_PROCLUS_MPB, "GPU_PROCLUS_MPB")]:
+    for algo, algo_name in [(PROCLUS, "PROCLUS"), (PROCLUS_KEEP, "PROCLUS-KEEP"),
+                            (PROCLUS_SAVE, "PROCLUS-SAVE"),
+                            (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_PROCLUS_KEEP, "GPU-PROCLUS-KEEP"),
+                            (GPU_PROCLUS_SAVE, "GPU-PROCLUS-SAVE")]:
         avg_running_times = []
         for n in reversed(ns):
             # cl = max(1, n//4000)
@@ -216,8 +217,10 @@ def run_diff_d():
 
     to_plt = []
 
-    for algo, algo_name in [(PROCLUS, "PROCLUS"), (GPU_PROCLUS, "GPU_PROCLUS"), (GPU_PROCLUS_KEEP, "GPU_PROCLUS_KEEP"),
-                            (GPU_PROCLUS_SAVE, "GPU_PROCLUS_SAVE")]:
+    for algo, algo_name in [(PROCLUS, "PROCLUS"), (PROCLUS_KEEP, "PROCLUS-KEEP"),
+                            (PROCLUS_SAVE, "PROCLUS-SAVE"),
+                            (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_PROCLUS_KEEP, "GPU-PROCLUS-KEEP"),
+                            (GPU_PROCLUS_SAVE, "GPU-PROCLUS-SAVE")]:
         avg_running_times = []
         for d in ds:
             print("d:", d)
@@ -237,7 +240,7 @@ def run_diff_d():
 
 def run_diff_n_param():
     n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    ns = [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000, 2048000, 4096000, 8192000]
+    ns = [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000]#, 2048000, 4096000, 8192000]
 
     print("running experiment: inc_n_param")
 
@@ -248,8 +251,10 @@ def run_diff_n_param():
         os.makedirs('plots/')
 
     to_plt = []
-    for algo, algo_name in [(PROCLUS, "PROCLUS"), (GPU_PROCLUS, "GPU_PROCLUS"), (GPU_PROCLUS_KEEP, "GPU_PROCLUS_KEEP"),
-                            (GPU_PROCLUS_SAVE, "GPU_PROCLUS_SAVE"), (GPU_PROCLUS_PARAM, "GPU_PROCLUS_PARAM")]:
+    for algo, algo_name in [(PROCLUS, "PROCLUS"), (PROCLUS_KEEP, "PROCLUS-KEEP"),
+                            (PROCLUS_SAVE, "PROCLUS-SAVE"), (PROCLUS_PARAM, "PROCLUS-PARAM"),
+                            (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_PROCLUS_KEEP, "GPU-PROCLUS-KEEP"),
+                            (GPU_PROCLUS_SAVE, "GPU-PROCLUS-SAVE"), (GPU_PROCLUS_PARAM, "GPU-PROCLUS-PARAM")]:
         avg_running_times = []
         for n in reversed(ns):
             # cl = max(1, n//4000)
@@ -287,8 +292,10 @@ def run_diff_d_param():
 
     to_plt = []
 
-    for algo, algo_name in [(PROCLUS, "PROCLUS"), (GPU_PROCLUS, "GPU_PROCLUS"), (GPU_PROCLUS_KEEP, "GPU_PROCLUS_KEEP"),
-                            (GPU_PROCLUS_SAVE, "GPU_PROCLUS_SAVE"), (GPU_PROCLUS_PARAM, "GPU_PROCLUS_PARAM")]:
+    for algo, algo_name in [(PROCLUS, "PROCLUS"), (PROCLUS_KEEP, "PROCLUS-KEEP"),
+                            (PROCLUS_SAVE, "PROCLUS-SAVE"), (PROCLUS_PARAM, "PROCLUS-PARAM"),
+                            (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_PROCLUS_KEEP, "GPU-PROCLUS-KEEP"),
+                            (GPU_PROCLUS_SAVE, "GPU-PROCLUS-SAVE"), (GPU_PROCLUS_PARAM, "GPU-PROCLUS-PARAM")]:
         avg_running_times = []
         for d in ds:
             print("d:", d)
@@ -320,8 +327,10 @@ def run_diff_k():
 
     to_plt = []
 
-    for algo, algo_name in [(PROCLUS, "PROCLUS"), (GPU_PROCLUS, "GPU_PROCLUS"), (GPU_PROCLUS_KEEP, "GPU_PROCLUS_KEEP"),
-                            (GPU_PROCLUS_SAVE, "GPU_PROCLUS_SAVE")]:
+    for algo, algo_name in [(PROCLUS, "PROCLUS"), (PROCLUS_KEEP, "PROCLUS-KEEP"),
+                            (PROCLUS_SAVE, "PROCLUS-SAVE"),
+                            (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_PROCLUS_KEEP, "GPU-PROCLUS-KEEP"),
+                            (GPU_PROCLUS_SAVE, "GPU-PROCLUS-SAVE")]:
         avg_running_times = []
         for k in ks:
             print("k:", k)
@@ -352,8 +361,10 @@ def run_diff_l():
 
     to_plt = []
 
-    for algo, algo_name in [(PROCLUS, "PROCLUS"), (GPU_PROCLUS, "GPU_PROCLUS"), (GPU_PROCLUS_KEEP, "GPU_PROCLUS_KEEP"),
-                            (GPU_PROCLUS_SAVE, "GPU_PROCLUS_SAVE")]:
+    for algo, algo_name in [(PROCLUS, "PROCLUS"), (PROCLUS_KEEP, "PROCLUS-KEEP"),
+                            (PROCLUS_SAVE, "PROCLUS-SAVE"),
+                            (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_PROCLUS_KEEP, "GPU-PROCLUS-KEEP"),
+                            (GPU_PROCLUS_SAVE, "GPU-PROCLUS-SAVE")]:
         avg_running_times = []
         for l in ls:
             print("l:", l)
@@ -384,8 +395,10 @@ def run_diff_a():
 
     to_plt = []
 
-    for algo, algo_name in [(PROCLUS, "PROCLUS"), (GPU_PROCLUS, "GPU_PROCLUS"), (GPU_PROCLUS_KEEP, "GPU_PROCLUS_KEEP"),
-                            (GPU_PROCLUS_SAVE, "GPU_PROCLUS_SAVE")]:
+    for algo, algo_name in [(PROCLUS, "PROCLUS"), (PROCLUS_KEEP, "PROCLUS-KEEP"),
+                            (PROCLUS_SAVE, "PROCLUS-SAVE"),
+                            (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_PROCLUS_KEEP, "GPU-PROCLUS-KEEP"),
+                            (GPU_PROCLUS_SAVE, "GPU-PROCLUS-SAVE")]:
         avg_running_times = []
         for a in As:
             print("A:", a)
@@ -416,8 +429,10 @@ def run_diff_b():
 
     to_plt = []
 
-    for algo, algo_name in [(PROCLUS, "PROCLUS"), (GPU_PROCLUS, "GPU_PROCLUS"), (GPU_PROCLUS_KEEP, "GPU_PROCLUS_KEEP"),
-                            (GPU_PROCLUS_SAVE, "GPU_PROCLUS_SAVE")]:
+    for algo, algo_name in [(PROCLUS, "PROCLUS"), (PROCLUS_KEEP, "PROCLUS-KEEP"),
+                            (PROCLUS_SAVE, "PROCLUS-SAVE"),
+                            (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_PROCLUS_KEEP, "GPU-PROCLUS-KEEP"),
+                            (GPU_PROCLUS_SAVE, "GPU-PROCLUS-SAVE")]:
         avg_running_times = []
         for b in Bs:
             print("B:", b)
@@ -448,8 +463,10 @@ def run_diff_dev():
 
     to_plt = []
 
-    for algo, algo_name in [(PROCLUS, "PROCLUS"), (GPU_PROCLUS, "GPU_PROCLUS"), (GPU_PROCLUS_KEEP, "GPU_PROCLUS_KEEP"),
-                            (GPU_PROCLUS_SAVE, "GPU_PROCLUS_SAVE")]:
+    for algo, algo_name in [(PROCLUS, "PROCLUS"), (PROCLUS_KEEP, "PROCLUS-KEEP"),
+                            (PROCLUS_SAVE, "PROCLUS-SAVE"),
+                            (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_PROCLUS_KEEP, "GPU-PROCLUS-KEEP"),
+                            (GPU_PROCLUS_SAVE, "GPU-PROCLUS-SAVE")]:
         avg_running_times = []
         for min_deviation in devs:
             print("min_deviation:", min_deviation)
@@ -480,8 +497,10 @@ def run_diff_cl():
 
     to_plt = []
 
-    for algo, algo_name in [(PROCLUS, "PROCLUS"), (GPU_PROCLUS, "GPU_PROCLUS"), (GPU_PROCLUS_KEEP, "GPU_PROCLUS_KEEP"),
-                            (GPU_PROCLUS_SAVE, "GPU_PROCLUS_SAVE")]:
+    for algo, algo_name in [(PROCLUS, "PROCLUS"), (PROCLUS_KEEP, "PROCLUS-KEEP"),
+                            (PROCLUS_SAVE, "PROCLUS-SAVE"),
+                            (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_PROCLUS_KEEP, "GPU-PROCLUS-KEEP"),
+                            (GPU_PROCLUS_SAVE, "GPU-PROCLUS-SAVE")]:
         avg_running_times = []
         for cl in cls:
             print("cl:", cl)
@@ -512,8 +531,10 @@ def run_diff_std():
 
     to_plt = []
 
-    for algo, algo_name in [(PROCLUS, "PROCLUS"), (GPU_PROCLUS, "GPU_PROCLUS"), (GPU_PROCLUS_KEEP, "GPU_PROCLUS_KEEP"),
-                            (GPU_PROCLUS_SAVE, "GPU_PROCLUS_SAVE")]:
+    for algo, algo_name in [(PROCLUS, "PROCLUS"), (PROCLUS_KEEP, "PROCLUS-KEEP"),
+                            (PROCLUS_SAVE, "PROCLUS-SAVE"),
+                            (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_PROCLUS_KEEP, "GPU-PROCLUS-KEEP"),
+                            (GPU_PROCLUS_SAVE, "GPU-PROCLUS-SAVE")]:
         avg_running_times = []
         for std in stds:
             print("std:", std)
