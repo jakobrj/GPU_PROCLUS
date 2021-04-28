@@ -133,15 +133,7 @@ int *gpu_greedy(float *d_data, int *d_S, int Bk, int Ak, int d, int n) {
 
     for (int i = 1; i < Bk; i++) {
 
-
-        printf("d_dist:\n");
-        print_array_gpu(d_dist, Ak);
-
         gpu_greedy_kernel_largest_2 << < grid, BLOCK_SIZE_SMALL >> > (d_max_value, d_S, d_M, d_dist, d_prev, Ak, i, n);
-
-
-        printf("m_i: ");
-        print_array_gpu(&d_M[i], 1);
 
         cudaMemset(d_max_value, 0, sizeof(float));
 
@@ -411,10 +403,6 @@ void gpu_find_dimensions(bool *d_D, float *d_Z, float *d_X,
             n, d, k);
 
     gpu_find_dimensions_kernel_Z << < k, d >> > (d_Z, d_X, k, d);
-
-
-    printf("d_Z: \n");
-    print_array_gpu(d_Z, k * d);
 
     //compute D
     set_all << < number_of_blocks, min(k * d, BLOCK_SIZE) >> > (d_D, false, k * d);
@@ -1202,9 +1190,6 @@ void gpu_find_dimensions_keep(bool *d_D, float *d_Z, float *d_X, float *d_H,
 
     gpu_find_dimensions_kernel_Z << < k, d >> > (d_Z, d_X, k, d);
 
-
-    printf("d_Z: \n");
-    print_array_gpu(d_Z, k * d);
 
     //compute D
     set_all << < number_of_blocks, min(k * d, BLOCK_SIZE) >> > (d_D, false, k * d);

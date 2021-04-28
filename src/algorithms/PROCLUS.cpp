@@ -80,7 +80,6 @@ bool **find_dimensions(at::Tensor data, int **L, int *L_sizes, int *M, int k, in
         }
     }
 
-    printf("Z:\n");
     for (int i = 0; i < k; i++) {
 
         Y[i] = mean_1d(X[i], d);
@@ -99,7 +98,6 @@ bool **find_dimensions(at::Tensor data, int **L, int *L_sizes, int *M, int k, in
             else
                 Z[i][j] = (X[i][j] - Y[i]) / sigma[i];
         }
-        print_array(Z[i], d);
     }
 
     //# ensuring that we find atleast 2 for each and than the k*l #todo fast - sort first instead
