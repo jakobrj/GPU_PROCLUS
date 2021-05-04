@@ -57,7 +57,7 @@ void gpu_shuffle_v3(int *d_in, int n, curandState *d_state) {
 
     //todo use https://stackoverflow.com/questions/12653995/how-to-generate-random-permutations-with-cuda
 
-    gpu_shuffle_v3_kernel<<<1, 1>>>(d_in, n, d_state);
+    gpu_shuffle_v3_kernel << < 1, 1 >> > (d_in, n, d_state);
 
 }
 
@@ -71,7 +71,7 @@ __global__ void gpu_random_sample_kernel(int *d_in, int k, int n, curandState *s
 }
 
 void gpu_random_sample(int *d_in, int k, int n, curandState *d_state) {
-    gpu_random_sample_kernel<<<1, 1>>>(d_in, k, n, d_state);
+    gpu_random_sample_kernel << < 1, 1 >> > (d_in, k, n, d_state);
 }
 
 __global__ void gpu_random_sample_kernel_locked(int *d_in, int k, int n, curandState *state, int *d_lock) {
@@ -79,13 +79,13 @@ __global__ void gpu_random_sample_kernel_locked(int *d_in, int k, int n, curandS
         int j = curand(&state[threadIdx.x]) % (n);
 
         if (i < j) {
-            while (atomicCAS(&d_lock[i], 0, 1) != 0);
-            while (atomicCAS(&d_lock[j], 0, 1) != 0);
+            while (atomicCAS(&d_lock[i], 0, 1) != 0);//printf("test1 %d, %d, d_lock[i]: %d\n", i, j, d_lock[i]);
+            while (atomicCAS(&d_lock[j], 0, 1) != 0);//printf("test2 %d, %d, d_lock[j]: %d\n", i, j, d_lock[j]);
         } else if (i > j) {
-            while (atomicCAS(&d_lock[j], 0, 1) != 0);
-            while (atomicCAS(&d_lock[i], 0, 1) != 0);
+            while (atomicCAS(&d_lock[j], 0, 1) != 0);//printf("test3 %d, %d, d_lock[j]: %d\n", i, j, d_lock[j]);
+            while (atomicCAS(&d_lock[i], 0, 1) != 0);//printf("test4 %d, %d, d_lock[i]: %d\n", i, j, d_lock[i]);
         } else {
-            while (atomicCAS(&d_lock[i], 0, 1) != 0);
+            while (atomicCAS(&d_lock[i], 0, 1) != 0);//printf("test5 %d, %d, d_lock[i]: %d\n", i, j, d_lock[i]);
         }
 
         int tmp_idx = d_in[i];
@@ -104,15 +104,46 @@ __global__ void gpu_random_sample_kernel_locked(int *d_in, int k, int n, curandS
     }
 }
 
+
+__global__ void gpu_random_sample_kernel_locked_v2(int *d_in, int k, int n, curandState *state, int *d_lock) {
+    for (int i = blockDim.x * blockIdx.x + threadIdx.x; i < k; i += gridDim.x * blockDim.x) {
+
+        int j = curand(&state[threadIdx.x]) % (n);
+
+        if (i > j) {
+            int tmp = j;
+            j = i;
+            i = tmp;
+        }
+
+        bool success = false;
+
+        while (!success) {
+            if (atomicCAS(&d_lock[i], 0, 1) == 0) {
+                if (i == j || atomicCAS(&d_lock[j], 0, 1) == 0) {
+                    int tmp_idx = d_in[i];
+                    d_in[i] = d_in[j];
+                    d_in[j] = tmp_idx;
+
+                    success = true;
+                    if (i != j) {
+                        atomicExch(&d_lock[j], 0);
+                    }
+                }
+                atomicExch(&d_lock[i], 0);
+            }
+        }
+    }
+}
+
 void gpu_random_sample_locked(int *d_in, int k, int n, curandState *d_state, int *d_lock) {
     cudaMemset(d_lock, 0, n * sizeof(int));
     int number_of_blocks = n / BLOCK_SIZE;
     if (n % BLOCK_SIZE) number_of_blocks++;
-    gpu_random_sample_kernel_locked<<<number_of_blocks, min(k, BLOCK_SIZE)>>>(d_in, k, n, d_state, d_lock);
+    gpu_random_sample_kernel_locked_v2 << < number_of_blocks, min(k, BLOCK_SIZE) >> > (d_in, k, n, d_state, d_lock);
 }
 
-
-
+//todo change this to be correct kind of locking
 __global__ void gpu_not_random_sample_kernel_locked(int *d_in, int k, int n, int *state, int *d_lock) {
     for (int i = blockDim.x * blockIdx.x + threadIdx.x; i < k; i += gridDim.x * blockDim.x) {
         int j = state[threadIdx.x] % (n);
@@ -144,11 +175,42 @@ __global__ void gpu_not_random_sample_kernel_locked(int *d_in, int k, int n, int
     }
 }
 
+__global__ void gpu_not_random_sample_kernel_locked_v2(int *d_in, int k, int n, int *state, int *d_lock) {
+    for (int i = blockDim.x * blockIdx.x + threadIdx.x; i < k; i += gridDim.x * blockDim.x) {
+        int j = state[threadIdx.x] % (n);
+        state[threadIdx.x] += 11;
+
+        if (i > j) {
+            int tmp = j;
+            j = i;
+            i = tmp;
+        }
+
+        bool success = false;
+
+        while (!success) {
+            if (atomicCAS(&d_lock[i], 0, 1) == 0) {
+                if (i == j || atomicCAS(&d_lock[j], 0, 1) == 0) {
+                    int tmp_idx = d_in[i];
+                    d_in[i] = d_in[j];
+                    d_in[j] = tmp_idx;
+
+                    success = true;
+                    if (i != j) {
+                        atomicExch(&d_lock[j], 0);
+                    }
+                }
+                atomicExch(&d_lock[i], 0);
+            }
+        }
+    }
+}
+
 void gpu_not_random_sample_locked(int *d_in, int k, int n, int *d_state, int *d_lock) {
     cudaMemset(d_lock, 0, n * sizeof(int));
     int number_of_blocks = n / BLOCK_SIZE;
     if (n % BLOCK_SIZE) number_of_blocks++;
-    gpu_not_random_sample_kernel_locked<<<1, 1>>>(d_in, k, n, d_state, d_lock);
+    gpu_not_random_sample_kernel_locked << < 1, 1 >> > (d_in, k, n, d_state, d_lock);
 }
 
 //float *copy_to_flatten_device(float **h_mem, int height, int width) {
@@ -223,7 +285,7 @@ void set_kernel(int *x, int i, int value) {
 }
 
 void set(int *x, int i, int value) {
-    set_kernel<<<1, 1>>>(x, i, value);
+    set_kernel << < 1, 1 >> > (x, i, value);
 }
 
 
@@ -233,7 +295,7 @@ void set_kernel(int *x, int *idx, int i, int value) {
 }
 
 void set(int *x, int *idx, int i, int value) {
-    set_kernel<<<1, 1>>>(x, idx, i, value);
+    set_kernel << < 1, 1 >> > (x, idx, i, value);
 }
 
 __global__
@@ -242,7 +304,7 @@ void set_kernel(float *x, int i, float value) {
 }
 
 void set(float *x, int i, float value) {
-    set_kernel<<<1, 1>>>(x, i, value);
+    set_kernel << < 1, 1 >> > (x, i, value);
 }
 
 

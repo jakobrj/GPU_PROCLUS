@@ -938,6 +938,7 @@ GPU_PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation
 
         //// update best ////
         termination_criterion += 1;
+
         gpu_update_best(d_cost, d_cost_best,
                         d_termination_criterion,
                         d_M_best, d_M_current,
@@ -1034,6 +1035,10 @@ GPU_PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation
     cudaDeviceSynchronize();
     gpuErrchk(cudaPeekAtLastError());
 //    cudaProfilerStop();
+
+    if (debug) {
+        cudaFree(d_state_fixed);
+    }
 
     return r;
 }

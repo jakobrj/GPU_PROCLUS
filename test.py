@@ -13,8 +13,8 @@ X = load_iris()[:, :4]
 
 # X = load_synt_gauss(n=n, d=d, cl=cl, re=0, cl_d=dims_pr_cl, std=std)
 
-n = X.shape[0]  # 100_000
-d = X.shape[1]
+n = 300#X.shape[0]  # 100_000
+d = 5#X.shape[1]
 cl = 3
 std = 5
 dims_pr_cl = 3
@@ -36,7 +36,7 @@ ls = [l + 1, l, l - 1]
 ks = [k + 1, k, k - 1]
 
 if experiment == "BASE":
-    rs = GPU_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds)
+    rs = GPU_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=True)
     gpu_avg_time = 0
     for _ in range(rounds):
         print("BASE", _)
