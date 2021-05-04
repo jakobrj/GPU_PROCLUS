@@ -4,6 +4,7 @@
 
 #include "../utils/util.h"
 #include "../utils/gpu_util.cuh"
+#include "../utils/cuda_util.cuh"
 #include "GPU_PROCLUS.cuh"
 
 #define BLOCK_SIZE 1024
@@ -206,8 +207,9 @@ void gpu_compute_L(int *d_L, int *d_L_sizes,
                    int *d_M_current,
                    float *d_data,
                    int n, int d, int k) {
+
     int number_of_blocks = n / BLOCK_SIZE_SMALL;
-    if (n % BLOCK_SIZE) number_of_blocks++;
+    if (n % BLOCK_SIZE_SMALL) number_of_blocks++;
     dim3 grid_k_n(k, number_of_blocks);
     gpu_compute_L_kernel_sum_dist_V2 << < grid_k_n, min(n, BLOCK_SIZE_SMALL), d * sizeof(float) >> >
                                                                               (d_dist_n_k, d_M_current,
@@ -266,6 +268,30 @@ void gpu_find_dimensions_kernel_X(float *d_X,
 
     float sum = 0.;
     for (int p = blockDim.y * blockIdx.y + threadIdx.y; p < L_i_sizes; p += gridDim.y * blockDim.y) {
+        int point = d_L[i * n + p];
+        sum += std::abs(d_data[point * d + j] - data_ij);
+    }
+
+    atomicAdd(&d_X[i * d + j], sum / L_i_sizes);
+
+}
+
+
+__global__
+void gpu_find_dimensions_kernel_X_v2(float *d_X,
+                                     int *d_L, int *d_L_sizes,
+                                     int *d_M_current,
+                                     float *d_data,
+                                     int n, int d, int k) {
+    int i = blockIdx.x; //independent for different k
+    int j = blockIdx.y; //independent for different d
+
+    int m_i = d_M_current[i];
+    int L_i_sizes = d_L_sizes[i];
+    float data_ij = d_data[m_i * d + j];
+
+    float sum = 0.;
+    for (int p = threadIdx.x; p < L_i_sizes; p += blockDim.x) {
         int point = d_L[i * n + p];
         sum += std::abs(d_data[point * d + j] - data_ij);
     }
@@ -394,6 +420,9 @@ void gpu_find_dimensions(bool *d_D, float *d_Z, float *d_X,
     if ((n / k) % remaining_d) number_of_blocks_X_join_v2++;
     dim3 grid_X_join_v2(k, number_of_blocks_X_join_v2);
     dim3 block_X_join_v2(d, remaining_d);
+//    dim3 grid_X_join_v2(k, d);
+//    dim3
+//    block_X_join_v2(BLOCK_SIZE);
 
     cudaMemset(d_X, 0, d * k * sizeof(float));
     gpu_find_dimensions_kernel_X << < grid_X_join_v2, block_X_join_v2 >> > (d_X,
@@ -401,6 +430,11 @@ void gpu_find_dimensions(bool *d_D, float *d_Z, float *d_X,
             d_M_current,
             d_data,
             n, d, k);
+//    gpu_find_dimensions_kernel_X_v2 << < grid_X_join_v2, block_X_join_v2 >> > (d_X,
+//            d_L, d_L_sizes,
+//            d_M_current,
+//            d_data,
+//            n, d, k);
 
     gpu_find_dimensions_kernel_Z << < k, d >> > (d_Z, d_X, k, d);
 
@@ -570,10 +604,11 @@ void gpu_evaluate_cluster_kernel(float *d_cost, int *d_C,
 void
 gpu_evaluate_cluster(float *d_cost, int *d_C, int *d_C_sizes, bool *d_D, int *d_D_sizes, float *d_data,
                      int n, int d, int k) {
+
     int number_of_blocks = n / BLOCK_SIZE;
     if (n % BLOCK_SIZE) number_of_blocks++;
     dim3 grid(d, k);
-    dim3 block(512);
+    dim3 block(min(BLOCK_SIZE, min((int) cuda_cores / k, (int) n / k)));
 
     cudaMemset(d_cost, 0, sizeof(float));
     gpu_evaluate_cluster_kernel << < grid, block >> > (d_cost, d_C, d_C_sizes, d_D, d_D_sizes, d_data,
@@ -1032,13 +1067,13 @@ GPU_PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation
     cudaFree(d_X);
     cudaFree(d_Z);
 
-    cudaDeviceSynchronize();
-    gpuErrchk(cudaPeekAtLastError());
 //    cudaProfilerStop();
 
     if (debug) {
         cudaFree(d_state_fixed);
     }
+
+    cudaDeviceSynchronize();
 
     return r;
 }
@@ -1111,7 +1146,7 @@ void gpu_compute_L_keep(int *d_L, int *d_L_sizes_change, int *d_L_sizes, int *d_
                         float *d_data,
                         int n, int d, int k) {
     int number_of_blocks = n / BLOCK_SIZE_SMALL;
-    if (n % BLOCK_SIZE) number_of_blocks++;
+    if (n % BLOCK_SIZE_SMALL) number_of_blocks++;
     dim3 grid_k_n(num_bad, number_of_blocks);
     gpu_compute_L_kernel_KEEP_dist << < grid_k_n, min(n, BLOCK_SIZE_SMALL), d * sizeof(float) >> > (d_dist_n_k,
             d_M_current, d_M_bad,
@@ -1259,7 +1294,6 @@ void gpu_replace_medoids_kernel_keep_reset(int *d_L_sizes, float *d_delta_old, f
 std::vector <at::Tensor>
 GPU_PROCLUS_KEEP(at::Tensor data, int k, int l, float a, float b, float min_deviation, int termination_rounds,
                  bool debug) {
-    //todo there might be an error is this!!!! it often use more iterations then the other version - which is should not!!!
     cudaDeviceSynchronize();
 //    cudaProfilerStart();
 
