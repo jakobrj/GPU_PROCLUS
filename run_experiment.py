@@ -23,7 +23,7 @@ def get_standard_params():
     min_deviation = 0.7
     termination_rounds = 5
 
-    rounds = 20
+    rounds = 10
 
     return n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds
 
