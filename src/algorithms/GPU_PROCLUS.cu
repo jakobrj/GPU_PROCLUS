@@ -1852,7 +1852,9 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
     bool *d_bad = device_allocate_bool(k);
     int *d_C = device_allocate_int(k * n);
     int *d_C_sizes = device_allocate_int(k);
+    gpuErrchk(cudaPeekAtLastError());
     int *d_C_best = device_allocate_int(n * k);
+    gpuErrchk(cudaPeekAtLastError());
     int *d_C_sizes_best = device_allocate_int(k);
     int *d_C_result = device_allocate_int(n);
     float *d_cost = device_allocate_float(1);
@@ -1862,7 +1864,9 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
     int *d_D_sizes = device_allocate_int(k);
     float *d_delta = device_allocate_float(k);
     float *d_delta_old = device_allocate_float(Bk);
+    gpuErrchk(cudaPeekAtLastError());
     float *d_dist_n_Bk = device_allocate_float_zero(n * Bk);
+    gpuErrchk(cudaPeekAtLastError());
     bool *d_dist_n_Bk_set = device_allocate_bool_zero(Bk);
     float *d_H = device_allocate_float_zero(Bk * d);
     int *d_L = device_allocate_int(n * k);
