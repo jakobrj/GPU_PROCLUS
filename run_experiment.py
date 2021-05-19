@@ -240,7 +240,7 @@ def run_diff_d():
 
 def run_diff_n_param():
     n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    ns = [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000]#, 2048000, 4096000, 8192000]
+    ns = [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000]  # , 2048000, 4096000, 8192000]
 
     print("running experiment: inc_n_param")
 
@@ -311,6 +311,77 @@ def run_diff_d_param():
 
     plot_multi(to_plt, ds, "number of dimensions", "inc_d_param", y_max=scale_lim)
     plot_speedup(to_plt, ds, "number of dimensions", "inc_d_param", y_max=scale_lim)
+
+
+def run_diff_n_param_large():
+    n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
+    ns = [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000, 2048000, 4096000, 8192000]
+
+    print("running experiment: inc_n_param_large")
+
+    if not os.path.exists('experiments_data/inc_n_param_large/'):
+        os.makedirs('experiments_data/inc_n_param_large/')
+
+    if not os.path.exists('plots/'):
+        os.makedirs('plots/')
+
+    to_plt = []
+    for algo, algo_name in [(GPU_PROCLUS, "GPU-PROCLUS"), (GPU_PROCLUS_KEEP, "GPU-PROCLUS-KEEP"),
+                            (GPU_PROCLUS_SAVE, "GPU-PROCLUS-SAVE"), (GPU_PROCLUS_PARAM, "GPU-PROCLUS-PARAM")]:
+        avg_running_times = []
+        for n in reversed(ns):
+            # cl = max(1, n//4000)
+            print("n:", n, "cl:", cl)
+            avg_running_time = 0.
+            running_times = []
+            for round in range(rounds):
+                running_time = run_param(algo, "inc_n_param_large", algo_name, n, d, k, l, a, b, min_deviation,
+                                         termination_rounds, cl, std, dims_pr_cl, round)
+                avg_running_time += running_time
+                running_times.append(running_time)
+
+            print(running_times)
+
+            avg_running_time /= rounds
+            avg_running_times.append(avg_running_time)
+        avg_running_times = list(reversed(avg_running_times))
+        to_plt.append((algo_name, avg_running_times))
+
+    plot_multi(to_plt, ns, "number of points", "inc_n_param_large", y_max=scale_lim)
+    plot_speedup(to_plt, ns, "number of points", "inc_n_param_large", y_max=scale_lim)
+
+
+def run_diff_d_param_large():
+    n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
+    ds = [10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100]
+
+    print("running experiment: inc_d_param_large")
+
+    if not os.path.exists('experiments_data/inc_d_param_large/'):
+        os.makedirs('experiments_data/inc_d_param_large/')
+
+    if not os.path.exists('plots/'):
+        os.makedirs('plots/')
+
+    to_plt = []
+
+    for algo, algo_name in [(GPU_PROCLUS, "GPU-PROCLUS"), (GPU_PROCLUS_KEEP, "GPU-PROCLUS-KEEP"),
+                            (GPU_PROCLUS_SAVE, "GPU-PROCLUS-SAVE"), (GPU_PROCLUS_PARAM, "GPU-PROCLUS-PARAM")]:
+        avg_running_times = []
+        for d in ds:
+            print("d:", d)
+            avg_running_time = 0.
+            for round in range(rounds):
+                running_time = run_param(algo, "inc_d_param_large", algo_name, n, d, k, l, a, b, min_deviation,
+                                         termination_rounds, cl, std, dims_pr_cl, round)
+                avg_running_time += running_time
+
+            avg_running_time /= rounds
+            avg_running_times.append(avg_running_time)
+        to_plt.append((algo_name, avg_running_times))
+
+    plot_multi(to_plt, ds, "number of dimensions", "inc_d_param_large", y_max=scale_lim)
+    plot_speedup(to_plt, ds, "number of dimensions", "inc_d_param_large", y_max=scale_lim)
 
 
 def run_diff_k():
@@ -553,6 +624,8 @@ def run_diff_std():
 
 experiment = sys.argv[1]
 if experiment == "all":
+    run_diff_n_param_large()
+    run_diff_d_param_large()
     run_diff_n_param()
     run_diff_d_param()
     run_diff_n()
@@ -576,5 +649,8 @@ elif experiment == "inc_cl":
     run_diff_cl()
 elif experiment == "inc_std":
     run_diff_std()
+elif experiment == "large":
+    run_diff_n_param_large()
+    run_diff_d_param_large()
 
 # real world

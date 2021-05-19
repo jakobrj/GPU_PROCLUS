@@ -1821,6 +1821,7 @@ std::vector <at::Tensor>
 GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_deviation, int termination_rounds,
                  bool debug) {
     cudaDeviceSynchronize();
+    gpuErrchk(cudaPeekAtLastError());
 //    cudaProfilerStart();
 
     //getting constants
@@ -1832,17 +1833,20 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
 
     //copying data to the GPU
     float *d_data = copy_to_flatten_device(data, n, d);
+    gpuErrchk(cudaPeekAtLastError());
 
     //initializing random generator for cuda
     curandState *d_state;
     cudaMalloc(&d_state, BLOCK_SIZE * sizeof(curandState));
     init_seed << < 1, BLOCK_SIZE >> > (d_state, 42);
+    gpuErrchk(cudaPeekAtLastError());
 
     int *d_state_fixed;
     if (debug) {
         cudaMalloc(&d_state_fixed, BLOCK_SIZE * sizeof(int));
         fill_with_indices(d_state_fixed, BLOCK_SIZE);
     }
+    gpuErrchk(cudaPeekAtLastError());
 
     //initializing cuda arrays
     bool *d_bad = device_allocate_bool(k);
@@ -1876,9 +1880,11 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
     int *d_termination_criterion = device_allocate_int_zero(1);
     float *d_X = device_allocate_float(k * d);
     float *d_Z = device_allocate_float(k * d);
+    gpuErrchk(cudaPeekAtLastError());
 
     //// Initialization Phase ////
     fill_with_indices(d_S, n);
+    gpuErrchk(cudaPeekAtLastError());
 
     if (debug) {
         gpu_not_random_sample_locked(d_S, Ak, n, d_state_fixed, d_lock);
@@ -1887,6 +1893,7 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
     }
 
     int *d_M = gpu_greedy(d_data, d_S, Bk, Ak, d, n);
+    gpuErrchk(cudaPeekAtLastError());
 
     //// Iterative Phase ///
     fill_with_indices(d_M_random, Bk);
@@ -1899,6 +1906,7 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
     cudaMemcpy(d_M_best, d_M_current, k * sizeof(int), cudaMemcpyDeviceToDevice);
     cudaMemcpy(d_M_idx, d_M_random, k * sizeof(int), cudaMemcpyDeviceToDevice);
     cudaMemcpy(d_M_idx_best, d_M_random, k * sizeof(int), cudaMemcpyDeviceToDevice);
+    gpuErrchk(cudaPeekAtLastError());
 
     int termination_criterion = 0;
     set(d_cost_best, 0, 1000000.);
@@ -1906,6 +1914,7 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
     int number_of_blocks = Bk / BLOCK_SIZE;
     if (Bk % BLOCK_SIZE) number_of_blocks++;
     set_all << < number_of_blocks, min(Bk, BLOCK_SIZE) >> > (d_delta_old, -1., Bk);
+    gpuErrchk(cudaPeekAtLastError());
 
     while (termination_criterion < termination_rounds) {
 
@@ -1916,6 +1925,7 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
                            d_M, d_M_idx,
                            d_data,
                            n, d, k);
+        gpuErrchk(cudaPeekAtLastError());
 
         //// find dimensions ////
         gpu_find_dimensions_save(d_D, d_Z, d_X, d_H,
@@ -1923,6 +1933,7 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
                                  d_M_current, d_M_idx,
                                  d_data,
                                  n, d, k, l);
+        gpuErrchk(cudaPeekAtLastError());
 
         //// assign points /////
         gpu_assign_points(d_C, d_C_sizes,
@@ -1930,6 +1941,7 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
                           d_M_current,
                           d_data,
                           n, d, k);
+        gpuErrchk(cudaPeekAtLastError());
 
         //// evaluate clustering ////
         gpu_evaluate_cluster(d_cost,
@@ -1937,6 +1949,7 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
                              d_D, d_D_sizes,
                              d_data,
                              n, d, k);
+        gpuErrchk(cudaPeekAtLastError());
 
         if (debug) {
             printf("d_C_sizes: ");
@@ -1959,6 +1972,7 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
                              d_C, d_C_sizes, d_C_best, d_C_sizes_best,
                              d_bad,
                              min_deviation, n, k);
+        gpuErrchk(cudaPeekAtLastError());
 
         if (debug) {
             printf("d_bad: ");
@@ -1978,6 +1992,7 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
         }
         gpu_replace_medoids_kernel_pre << < 1, 1 >> > (d_M_idx, d_M_idx_best, d_M_current, d_M_random, d_M, Bk,
                 d_M_best, d_bad, k, n);
+        gpuErrchk(cudaPeekAtLastError());
 
     }
 
@@ -1987,12 +2002,14 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
                         d_M_best,
                         d_data,
                         n, d, k, l);
+    gpuErrchk(cudaPeekAtLastError());
 
     gpu_assign_points(d_C_best, d_C_sizes_best,
                       d_D, d_Ds, d_D_sizes,
                       d_M_best,
                       d_data,
                       n, d, k);
+    gpuErrchk(cudaPeekAtLastError());
 
     remove_outliers(d_C_result, d_C_best, d_C_sizes_best,
                     d_D,
@@ -2000,6 +2017,7 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
                     d_M_best,
                     d_data,
                     n, d, k);
+    gpuErrchk(cudaPeekAtLastError());
 
     // building result
     std::vector <at::Tensor> r;
@@ -2015,6 +2033,8 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
     r.push_back(M_Tensor);
     r.push_back(D_Tensor);
     r.push_back(C_Tensor);
+
+    gpuErrchk(cudaPeekAtLastError());
 
     // free all
     cudaFree(d_bad);
