@@ -94,9 +94,6 @@ def load_skyserver_1x1():
     m = torch.cat(m_list)
     return normalize(m)
 
-
-TORCH_CUDA_ARCH_LIST = "3.7;5.0;6.0;6.1;7.0;7.5"
-
 t0 = time.time()
 print("Compiling our c++/cuda code, this usually takes 1-2 min. ")
 impl = load(name="GPU_PROCLUS11",
@@ -107,7 +104,7 @@ impl = load(name="GPU_PROCLUS11",
                 "src/utils/util.cpp",
                 "src/utils/mem_util.cpp",
                 "src/utils/gpu_util.cu"
-            ], extra_cuda_cflags=["-w"], extra_cflags=["-w"], with_cuda=True)
+            ], extra_cuda_cflags=["-w", "-gencode arch=compute_61,code=sm_61"], extra_cflags=["-w"], with_cuda=True)
 
 print("Finished compilation, took: %.4fs" % (time.time() - t0))
 
