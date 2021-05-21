@@ -27,7 +27,9 @@ termination_rounds = 5
 
 rounds = 5
 
+print("before generation")
 X = load_synt_gauss(n=n, d=d, cl=cl, re=0, cl_d=dims_pr_cl, std=std)
+print("after generation")
 
 torch.cuda.synchronize()
 
