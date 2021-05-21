@@ -105,7 +105,7 @@ impl = load(name="GPU_PROCLUS11",
                 "src/utils/util.cpp",
                 "src/utils/mem_util.cpp",
                 "src/utils/gpu_util.cu"
-            ], extra_cuda_cflags=["-w"], extra_cflags=["-w"], with_cuda=True)
+            ], extra_cuda_cflags=["-w"], extra_cflags=["-w"])
 
 print("Finished compilation, took: %.4fs" % (time.time() - t0))
 
