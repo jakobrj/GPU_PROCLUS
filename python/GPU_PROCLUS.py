@@ -105,7 +105,7 @@ impl = load(name="GPU_PROCLUS11",
                 "src/utils/util.cpp",
                 "src/utils/mem_util.cpp",
                 "src/utils/gpu_util.cu"
-            ], extra_cuda_cflags=["-w", " --gpu-architecture=compute_60"], extra_cflags=["-w", " --gpu-architecture=compute_60"], with_cuda=True)
+            ], extra_cuda_cflags=["-w"], extra_cflags=["-w"], with_cuda=True)
 
 print("Finished compilation, took: %.4fs" % (time.time() - t0))
 
@@ -113,11 +113,14 @@ print("Finished compilation, took: %.4fs" % (time.time() - t0))
 def PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=False):
     return impl.PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug)
 
+
 def PROCLUS_KEEP(X, k, l, a, b, min_deviation, termination_rounds, debug=False):
     return impl.PROCLUS_KEEP(X, k, l, a, b, min_deviation, termination_rounds, debug)
 
+
 def PROCLUS_SAVE(X, k, l, a, b, min_deviation, termination_rounds, debug=False):
     return impl.PROCLUS_SAVE(X, k, l, a, b, min_deviation, termination_rounds, debug)
+
 
 def PROCLUS_PARAM(X, ks, ls, a, b, min_deviation, termination_rounds, debug=False):
     return impl.PROCLUS_PARAM(X, ks, ls, a, b, min_deviation, termination_rounds, debug)
@@ -126,11 +129,14 @@ def PROCLUS_PARAM(X, ks, ls, a, b, min_deviation, termination_rounds, debug=Fals
 def GPU_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=False):
     return impl.GPU_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug)
 
+
 def GPU_PROCLUS_KEEP(X, k, l, a, b, min_deviation, termination_rounds, debug=False):
     return impl.GPU_PROCLUS_KEEP(X, k, l, a, b, min_deviation, termination_rounds, debug)
 
+
 def GPU_PROCLUS_SAVE(X, k, l, a, b, min_deviation, termination_rounds, debug=False):
     return impl.GPU_PROCLUS_SAVE(X, k, l, a, b, min_deviation, termination_rounds, debug)
+
 
 def GPU_PROCLUS_PARAM(X, ks, ls, a, b, min_deviation, termination_rounds):
     return impl.GPU_PROCLUS_PARAM(X, ks, ls, a, b, min_deviation, termination_rounds)
