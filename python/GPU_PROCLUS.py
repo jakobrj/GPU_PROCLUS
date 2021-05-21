@@ -96,7 +96,7 @@ def load_skyserver_1x1():
 
 t0 = time.time()
 print("Compiling our c++/cuda code, this usually takes 1-2 min. ")
-impl = load(name="GPU_PROCLUS11",
+impl = load(name="GPU_PROCLUS12",
             sources=[
                 "src/map/GPU_PROCLUS_map.cpp",
                 "src/algorithms/PROCLUS.cpp",
@@ -104,7 +104,7 @@ impl = load(name="GPU_PROCLUS11",
                 "src/utils/util.cpp",
                 "src/utils/mem_util.cpp",
                 "src/utils/gpu_util.cu"
-            ], extra_cuda_cflags=["-w", "-gencode arch=compute_61,code=sm_61"], extra_cflags=["-w"], with_cuda=True)
+            ], extra_cuda_cflags=["-w"], extra_cflags=["-w"], with_cuda=True)
 
 print("Finished compilation, took: %.4fs" % (time.time() - t0))
 
