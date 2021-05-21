@@ -105,9 +105,7 @@ impl = load(name="GPU_PROCLUS11",
                 "src/utils/util.cpp",
                 "src/utils/mem_util.cpp",
                 "src/utils/gpu_util.cu"
-            ], extra_cuda_cflags=["-w",
-                                  "ARCH= -gencode arch=compute_35,code=sm_35 -gencode arch=compute_50,code=[sm_50,compute_50] -gencode arch=compute_52,code=[sm_52,compute_52] -gencode arch=compute_61,code=[sm_61,compute_61] -gencode arch=compute_70,code=[sm_70,compute_70]"],
-            extra_cflags=["-w"], with_cuda=True)
+            ], extra_cuda_cflags=["-w"], extra_cflags=["-w"], with_cuda=True)
 
 print("Finished compilation, took: %.4fs" % (time.time() - t0))
 
