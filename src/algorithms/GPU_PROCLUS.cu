@@ -1497,6 +1497,7 @@ GPU_PROCLUS_KEEP(at::Tensor data, int k, int l, float a, float b, float min_devi
     r.push_back(M_Tensor);
     r.push_back(D_Tensor);
     r.push_back(C_Tensor);
+    gpuErrchk(cudaPeekAtLastError());
 
     // free all
     cudaFree(d_bad);
