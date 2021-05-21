@@ -7,7 +7,7 @@
 #include "../utils/cuda_util.cuh"
 #include "GPU_PROCLUS.cuh"
 
-#define BLOCK_SIZE 512
+#define BLOCK_SIZE 1024
 #define BLOCK_SIZE_SMALL 128
 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
@@ -608,7 +608,7 @@ gpu_evaluate_cluster(float *d_cost, int *d_C, int *d_C_sizes, bool *d_D, int *d_
     int number_of_blocks = n / BLOCK_SIZE;
     if (n % BLOCK_SIZE) number_of_blocks++;
     dim3 grid(d, k);
-    dim3 block(min(BLOCK_SIZE, min((int) cuda_cores / k, (int) n / k)));
+    dim3 block(min(BLOCK_SIZE, (int) n / k));
 
     gpuErrchk(cudaPeekAtLastError());
     cudaMemset(d_cost, 0, sizeof(float));

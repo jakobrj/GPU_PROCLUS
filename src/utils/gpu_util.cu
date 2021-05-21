@@ -5,7 +5,7 @@
 #include "curand_kernel.h"
 
 #define SECTION_SIZE 64
-#define BLOCK_SIZE 512
+#define BLOCK_SIZE 1024
 
 int *gpu_shuffle(int *h_indices, int n) {
 

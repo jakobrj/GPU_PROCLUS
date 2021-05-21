@@ -187,6 +187,7 @@ def run_diff_n():
             avg_running_time = 0.
             running_times = []
             for round in range(rounds):
+                print("round:", round)
                 running_time = run(algo, "inc_n", algo_name, n, d, k, l, a, b, min_deviation, termination_rounds, cl,
                                    std, dims_pr_cl, round)
                 avg_running_time += running_time
@@ -226,6 +227,7 @@ def run_diff_d():
             print("d:", d)
             avg_running_time = 0.
             for round in range(rounds):
+                print("round:", round)
                 running_time = run(algo, "inc_d", algo_name, n, d, k, l, a, b, min_deviation, termination_rounds, cl,
                                    std, dims_pr_cl, round)
                 avg_running_time += running_time
@@ -407,6 +409,7 @@ def run_diff_k():
             print("k:", k)
             avg_running_time = 0.
             for round in range(rounds):
+                print("round:", round)
                 running_time = run(algo, "inc_k", algo_name, n, d, k, l, a, b, min_deviation, termination_rounds, cl,
                                    std, dims_pr_cl, round)
                 avg_running_time += running_time
@@ -441,6 +444,7 @@ def run_diff_l():
             print("l:", l)
             avg_running_time = 0.
             for round in range(rounds):
+                print("round:", round)
                 running_time = run(algo, "inc_l", algo_name, n, d, k, l, a, b, min_deviation, termination_rounds, cl,
                                    std, dims_pr_cl, round)
                 avg_running_time += running_time
@@ -475,6 +479,7 @@ def run_diff_a():
             print("A:", a)
             avg_running_time = 0.
             for round in range(rounds):
+                print("round:", round)
                 running_time = run(algo, "inc_A", algo_name, n, d, k, l, a, b, min_deviation, termination_rounds, cl,
                                    std, dims_pr_cl, round)
                 avg_running_time += running_time
@@ -509,6 +514,7 @@ def run_diff_b():
             print("B:", b)
             avg_running_time = 0.
             for round in range(rounds):
+                print("round:", round)
                 running_time = run(algo, "inc_B", algo_name, n, d, k, l, a, b, min_deviation, termination_rounds, cl,
                                    std, dims_pr_cl, round)
                 avg_running_time += running_time
@@ -543,6 +549,7 @@ def run_diff_dev():
             print("min_deviation:", min_deviation)
             avg_running_time = 0.
             for round in range(rounds):
+                print("round:", round)
                 running_time = run(algo, "inc_dev", algo_name, n, d, k, l, a, b, min_deviation, termination_rounds, cl,
                                    std, dims_pr_cl, round)
                 avg_running_time += running_time
@@ -577,6 +584,7 @@ def run_diff_cl():
             print("cl:", cl)
             avg_running_time = 0.
             for round in range(rounds):
+                print("round:", round)
                 running_time = run(algo, "inc_cl", algo_name, n, d, k, l, a, b, min_deviation, termination_rounds, cl,
                                    std, dims_pr_cl, round)
                 avg_running_time += running_time
@@ -611,6 +619,7 @@ def run_diff_std():
             print("std:", std)
             avg_running_time = 0.
             for round in range(rounds):
+                print("round:", round)
                 running_time = run(algo, "inc_std", algo_name, n, d, k, l, a, b, min_deviation, termination_rounds, cl,
                                    std, dims_pr_cl, round)
                 avg_running_time += running_time
