@@ -12,7 +12,7 @@ X = load_iris()[:, :4]
 # X = load_synt(20, 10000, 20, 0)
 
 
-n = 1_000_000  # X.shape[0]  # 100_000
+n = 10_000  # X.shape[0]  # 100_000
 d = 15  # X.shape[1]
 cl = 10
 std = 5
