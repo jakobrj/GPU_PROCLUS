@@ -95,6 +95,8 @@ def load_skyserver_1x1():
     return normalize(m)
 
 
+TORCH_CUDA_ARCH_LIST = "3.7;5.0;6.0;6.1;7.0;7.5"
+
 t0 = time.time()
 print("Compiling our c++/cuda code, this usually takes 1-2 min. ")
 impl = load(name="GPU_PROCLUS11",
