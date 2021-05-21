@@ -7,7 +7,7 @@
 #include "../utils/cuda_util.cuh"
 #include "GPU_PROCLUS.cuh"
 
-#define BLOCK_SIZE 1024
+#define BLOCK_SIZE 512
 #define BLOCK_SIZE_SMALL 128
 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
