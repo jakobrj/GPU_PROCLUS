@@ -610,9 +610,12 @@ gpu_evaluate_cluster(float *d_cost, int *d_C, int *d_C_sizes, bool *d_D, int *d_
     dim3 grid(d, k);
     dim3 block(min(BLOCK_SIZE, min((int) cuda_cores / k, (int) n / k)));
 
+    gpuErrchk(cudaPeekAtLastError());
     cudaMemset(d_cost, 0, sizeof(float));
+    gpuErrchk(cudaPeekAtLastError());
     gpu_evaluate_cluster_kernel << < grid, block >> > (d_cost, d_C, d_C_sizes, d_D, d_D_sizes, d_data,
             n, d, k);
+    gpuErrchk(cudaPeekAtLastError());
 }
 
 __global__
