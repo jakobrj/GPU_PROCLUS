@@ -23,7 +23,7 @@ def get_standard_params():
     min_deviation = 0.7
     termination_rounds = 5
 
-    rounds = 10
+    rounds = 20
 
     return n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds
 
@@ -319,7 +319,7 @@ def run_diff_d_param():
 
 def run_diff_n_param_large():
     n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    ns = [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000, 2048000, 4096000, 8192000]
+    ns = [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000, 2048000, 4096000, 8192000, 8192000 * 2]
 
     print("running experiment: inc_n_param_large")
 
@@ -650,6 +650,7 @@ if experiment == "all":
     run_diff_dev()
     run_diff_cl()
     run_diff_std()
+    os.system('python run_real.py')
 elif experiment == "inc_n":
     run_diff_n()
 elif experiment == "inc_d":
