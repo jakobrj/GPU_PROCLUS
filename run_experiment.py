@@ -319,7 +319,7 @@ def run_diff_d_param():
 
 def run_diff_n_param_large():
     n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    ns = [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000, 2048000, 4096000, 8192000, 8192000 * 2]
+    ns = [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000, 2048000, 4096000, 8192000]
 
     print("running experiment: inc_n_param_large")
 
