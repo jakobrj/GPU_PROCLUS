@@ -8,6 +8,68 @@ font_size = 20
 dist_lim = 250
 scale_lim = 1000
 
+colors_8 = [
+    "#005C53",
+    "#AF3026",
+    "#028CCA",
+    "#DD37FA",
+    "#7DB042",
+    "#FF9C00",
+    "#8AB2FF",
+    "#F5E238"
+]
+
+markers_8 = [
+    "x",
+    "o",
+    "*",
+    "s",
+    "x",
+    "o",
+    "*",
+    "s",
+]
+
+linestyles_8 = [
+    "dashed",
+    "dashed",
+    "dashed",
+    "dashed",
+    "solid",
+    "solid",
+    "solid",
+    "solid",
+]
+
+colors_6 = [
+    "#005C53",
+    "#AF3026",
+    "#028CCA",
+    "#7DB042",
+    "#FF9C00",
+    "#8AB2FF",
+]
+
+markers_6 = [
+    "x",
+    "o",
+    "*",
+    "x",
+    "o",
+    "*",
+]
+
+linestyles_6 = [
+    "dashed",
+    "dashed",
+    "dashed",
+    "dashed",
+    "solid",
+    "solid",
+    "solid",
+    "solid",
+]
+
 
 def get_standard_params():
     d = 15
@@ -128,18 +190,60 @@ def plot_multi(to_plt, xs, x_label, experiment, y_max=None):
     print(to_plt)
     print(xs)
 
+    colors = colors_8
+    markers = markers_8
+    linestyles = linestyles_8
+    if len(to_plt) == 6:
+        colors = colors_6
+        markers = markers_8
+        linestyles = linestyles_8
+
+    plt.figure(figsize=(6, 5))
     plt.rcParams.update({'font.size': font_size})
+    i = 0
     for algo_name, avg_running_times in to_plt:
-        plt.plot(xs[:len(avg_running_times)], avg_running_times, marker="x", label=algo_name)
+        plt.plot(xs[:len(avg_running_times)], avg_running_times, color=colors[i], marker=markers[i],
+                 linestyle=linestyles[i], label=algo_name)
+        i += 1
     plt.gcf().subplots_adjust(left=0.14)
     plt.ylabel('time in seconds')
     plt.xlabel(x_label)
-    plt.legend()
+    plt.yscale("log")
+    if not y_max is None:
+        plt.ylim(0.001, y_max)
+    plt.tight_layout()
+    plt.savefig("plots/" + experiment + ".pdf")
+    plt.clf()
+
+
+def plot_multi_legend(to_plt, xs, x_label, experiment, y_max=None):
+    print(to_plt)
+    print(xs)
+
+    colors = colors_8
+    markers = markers_8
+    linestyles = linestyles_8
+    if len(to_plt) == 6:
+        colors = colors_6
+        markers = markers_8
+        linestyles = linestyles_8
+
+    plt.figure(figsize=(10, 5))
+    plt.rcParams.update({'font.size': font_size})
+    i = 0
+    for algo_name, avg_running_times in to_plt:
+        plt.plot(xs[:len(avg_running_times)], avg_running_times, color=colors[i], marker=markers[i],
+                 linestyle=linestyles[i], label=algo_name)
+        i += 1
+    plt.gcf().subplots_adjust(left=0.14)
+    plt.ylabel('time in seconds')
+    plt.xlabel(x_label)
+    plt.legend(loc='upper left', bbox_to_anchor=(1., 1.))
     plt.yscale("log")
     if not y_max is None:
         plt.ylim(0, y_max)
     plt.tight_layout()
-    plt.savefig("plots/" + experiment + ".pdf")
+    plt.savefig("plots/" + experiment + "_legend.pdf")
     plt.clf()
 
 
@@ -147,19 +251,63 @@ def plot_speedup(to_plt, xs, x_label, experiment, y_max=None):
     print(to_plt)
     print(xs)
 
+    colors = colors_8
+    markers = markers_8
+    linestyles = linestyles_8
+    if len(to_plt) == 6:
+        colors = colors_6
+        markers = markers_8
+        linestyles = linestyles_8
+
     _, base = to_plt[0]
 
+    plt.figure(figsize=(6, 5))
     plt.rcParams.update({'font.size': font_size})
+    i = 0
     for algo_name, avg_running_times in to_plt:
-        plt.plot(xs[:len(avg_running_times)], np.array(base) / np.array(avg_running_times), marker="x", label=algo_name)
+        plt.plot(xs[:len(avg_running_times)], np.array(base) / np.array(avg_running_times), color=colors[i],
+                 marker=markers[i], linestyle=linestyles[i],
+                 label=algo_name)
+        i += 1
     plt.gcf().subplots_adjust(left=0.14)
     plt.ylabel('factor of speedup')
     plt.xlabel(x_label)
-    plt.legend()
     if not y_max is None:
         plt.ylim(0, 8000)
     plt.tight_layout()
     plt.savefig("plots/" + experiment + "_speedup.pdf")
+    plt.clf()
+
+
+def plot_speedup_legend(to_plt, xs, x_label, experiment, y_max=None):
+    print(to_plt)
+    print(xs)
+
+    colors = colors_8
+    markers = markers_8
+    linestyles = linestyles_8
+    if len(to_plt) == 6:
+        colors = colors_6
+        markers = markers_8
+        linestyles = linestyles_8
+
+    _, base = to_plt[0]
+
+    plt.figure(figsize=(6, 5))
+    plt.rcParams.update({'font.size': font_size})
+    i = 0
+    for algo_name, avg_running_times in to_plt:
+        plt.plot([], [], color=colors[i], marker=markers[i], linestyle=linestyles[i], label=algo_name)
+        i += 1
+    plt.gcf().subplots_adjust(left=0.14)
+    plt.ylabel('factor of speedup')
+    plt.xlabel(x_label)
+    plt.legend(loc='upper right', bbox_to_anchor=(1., 1.))
+    if not y_max is None:
+        plt.ylim(0, 8000)
+    plt.tight_layout()
+    plt.gca().set_axis_off()
+    plt.savefig("plots/" + experiment + "_speedup_legend.pdf")
     plt.clf()
 
 
@@ -201,7 +349,9 @@ def run_diff_n():
         to_plt.append((algo_name, avg_running_times))
 
     plot_multi(to_plt, ns, "number of points", "inc_n", y_max=scale_lim)
+    plot_multi_legend(to_plt, ns, "number of points", "inc_n", y_max=scale_lim)
     plot_speedup(to_plt, ns, "number of points", "inc_n", y_max=scale_lim)
+    plot_speedup_legend(to_plt, ns, "number of points", "inc_n", y_max=scale_lim)
 
 
 def run_diff_d():
@@ -237,7 +387,9 @@ def run_diff_d():
         to_plt.append((algo_name, avg_running_times))
 
     plot_multi(to_plt, ds, "number of dimensions", "inc_d", y_max=scale_lim)
+    plot_multi_legend(to_plt, ds, "number of dimensions", "inc_d", y_max=scale_lim)
     plot_speedup(to_plt, ds, "number of dimensions", "inc_d", y_max=scale_lim)
+    plot_speedup_legend(to_plt, ds, "number of dimensions", "inc_d", y_max=scale_lim)
 
 
 def run_diff_n_param():
@@ -272,13 +424,15 @@ def run_diff_n_param():
 
             print(running_times)
 
-            avg_running_time /= rounds
+            avg_running_time /= (rounds*9)
             avg_running_times.append(avg_running_time)
         avg_running_times = list(reversed(avg_running_times))
         to_plt.append((algo_name, avg_running_times))
 
     plot_multi(to_plt, ns, "number of points", "inc_n_param", y_max=scale_lim)
+    plot_multi_legend(to_plt, ns, "number of points", "inc_n_param", y_max=scale_lim)
     plot_speedup(to_plt, ns, "number of points", "inc_n_param", y_max=scale_lim)
+    plot_speedup_legend(to_plt, ns, "number of points", "inc_n_param", y_max=scale_lim)
 
 
 def run_diff_d_param():
@@ -314,7 +468,9 @@ def run_diff_d_param():
         to_plt.append((algo_name, avg_running_times))
 
     plot_multi(to_plt, ds, "number of dimensions", "inc_d_param", y_max=scale_lim)
+    plot_multi_legend(to_plt, ds, "number of dimensions", "inc_d_param", y_max=scale_lim)
     plot_speedup(to_plt, ds, "number of dimensions", "inc_d_param", y_max=scale_lim)
+    plot_speedup_legend(to_plt, ds, "number of dimensions", "inc_d_param", y_max=scale_lim)
 
 
 def run_diff_n_param_large():
@@ -353,7 +509,8 @@ def run_diff_n_param_large():
         to_plt.append((algo_name, avg_running_times))
 
     plot_multi(to_plt, ns, "number of points", "inc_n_param_large", y_max=scale_lim)
-    plot_speedup(to_plt, ns, "number of points", "inc_n_param_large", y_max=scale_lim)
+    plot_multi_legend(to_plt, ns, "number of points", "inc_n_param_large", y_max=scale_lim)
+    # plot_speedup(to_plt, ns, "number of points", "inc_n_param_large", y_max=scale_lim)
 
 
 def run_diff_d_param_large():
@@ -387,7 +544,8 @@ def run_diff_d_param_large():
         to_plt.append((algo_name, avg_running_times))
 
     plot_multi(to_plt, ds, "number of dimensions", "inc_d_param_large", y_max=scale_lim)
-    plot_speedup(to_plt, ds, "number of dimensions", "inc_d_param_large", y_max=scale_lim)
+    plot_multi_legend(to_plt, ds, "number of dimensions", "inc_d_param_large", y_max=scale_lim)
+    # plot_speedup(to_plt, ds, "number of dimensions", "inc_d_param_large", y_max=scale_lim)
 
 
 def run_diff_k():
@@ -423,6 +581,7 @@ def run_diff_k():
         to_plt.append((algo_name, avg_running_times))
 
     plot_multi(to_plt, ks, "number of clusters", "inc_k", y_max=scale_lim)
+    plot_multi_legend(to_plt, ks, "number of clusters", "inc_k", y_max=scale_lim)
 
 
 def run_diff_l():
@@ -458,6 +617,7 @@ def run_diff_l():
         to_plt.append((algo_name, avg_running_times))
 
     plot_multi(to_plt, ls, "average number of dimensions", "inc_l", y_max=scale_lim)
+    plot_multi_legend(to_plt, ls, "average number of dimensions", "inc_l", y_max=scale_lim)
 
 
 def run_diff_a():
@@ -493,6 +653,7 @@ def run_diff_a():
         to_plt.append((algo_name, avg_running_times))
 
     plot_multi(to_plt, As, "constant A", "inc_A", y_max=scale_lim)
+    plot_multi_legend(to_plt, As, "constant A", "inc_A", y_max=scale_lim)
 
 
 def run_diff_b():
@@ -528,6 +689,7 @@ def run_diff_b():
         to_plt.append((algo_name, avg_running_times))
 
     plot_multi(to_plt, Bs, "constant B", "inc_B", y_max=scale_lim)
+    plot_multi_legend(to_plt, Bs, "constant B", "inc_B", y_max=scale_lim)
 
 
 def run_diff_dev():
@@ -563,6 +725,7 @@ def run_diff_dev():
         to_plt.append((algo_name, avg_running_times))
 
     plot_multi(to_plt, devs, "$min_{deviation}$", "inc_dev", y_max=scale_lim)
+    plot_multi_legend(to_plt, devs, "$min_{deviation}$", "inc_dev", y_max=scale_lim)
 
 
 def run_diff_cl():
@@ -598,6 +761,7 @@ def run_diff_cl():
         to_plt.append((algo_name, avg_running_times))
 
     plot_multi(to_plt, cls, "number of actual clusters", "inc_cl", y_max=scale_lim)
+    plot_multi_legend(to_plt, cls, "number of actual clusters", "inc_cl", y_max=scale_lim)
 
 
 def run_diff_std():
@@ -633,6 +797,7 @@ def run_diff_std():
         to_plt.append((algo_name, avg_running_times))
 
     plot_multi(to_plt, stds, "standard deviation", "inc_std", y_max=scale_lim)
+    plot_multi_legend(to_plt, stds, "standard deviation", "inc_std", y_max=scale_lim)
 
 
 experiment = sys.argv[1]
@@ -650,7 +815,6 @@ if experiment == "all":
     run_diff_dev()
     run_diff_cl()
     run_diff_std()
-    os.system('python run_real.py')
 elif experiment == "inc_n":
     run_diff_n()
 elif experiment == "inc_d":
