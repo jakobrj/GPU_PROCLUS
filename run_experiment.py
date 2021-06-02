@@ -7,16 +7,51 @@ import matplotlib.pyplot as plt
 font_size = 20
 dist_lim = 250
 scale_lim = 1000
+plt.rcParams.update({'font.family': "Times New Roman"})
+plt.rcParams.update({'font.serif': "Times New Roman"})
+
+colors_4 = [
+    "#74A23D",
+    "#F19000",
+    "#8BB3FF",
+    "#E2D034",
+]
+
+markers_4 = [
+    "x",
+    "o",
+    "*",
+    "s",
+]
+
+linestyles_4 = [
+    "solid",
+    "solid",
+    "solid",
+    "solid",
+]
+
+# colors_8 = [
+#     "#79211A",
+#     "#00C6B4",
+#     "#475BCC",
+#     "#CBBB2F",
+#     "#425D23",
+#     "#FF57FF",
+#     "#B56C00",
+#     "#3AFFFF"
+# ]
 
 colors_8 = [
-    "#005C53",
-    "#AF3026",
-    "#028CCA",
-    "#DD37FA",
-    "#7DB042",
-    "#FF9C00",
-    "#8AB2FF",
-    "#F5E238"
+    "#00554D",
+    "#A12C23",
+    "#0281BB",
+    "#CC33E7",
+
+    "#74A23D",
+    "#F19000",
+    "#8BB3FF",
+    "#E2D034",
 ]
 
 markers_8 = [
@@ -42,12 +77,13 @@ linestyles_8 = [
 ]
 
 colors_6 = [
-    "#005C53",
-    "#AF3026",
-    "#028CCA",
-    "#7DB042",
-    "#FF9C00",
-    "#8AB2FF",
+    "#00554D",
+    "#A12C23",
+    "#0281BB",
+
+    "#74A23D",
+    "#F19000",
+    "#8BB3FF",
 ]
 
 markers_6 = [
@@ -63,8 +99,6 @@ linestyles_6 = [
     "dashed",
     "dashed",
     "dashed",
-    "dashed",
-    "solid",
     "solid",
     "solid",
     "solid",
@@ -195,8 +229,12 @@ def plot_multi(to_plt, xs, x_label, experiment, y_max=None):
     linestyles = linestyles_8
     if len(to_plt) == 6:
         colors = colors_6
-        markers = markers_8
-        linestyles = linestyles_8
+        markers = markers_6
+        linestyles = linestyles_6
+    if len(to_plt) == 4:
+        colors = colors_4
+        markers = markers_4
+        linestyles = linestyles_4
 
     plt.figure(figsize=(6, 5))
     plt.rcParams.update({'font.size': font_size})
@@ -209,6 +247,7 @@ def plot_multi(to_plt, xs, x_label, experiment, y_max=None):
     plt.ylabel('time in seconds')
     plt.xlabel(x_label)
     plt.yscale("log")
+    plt.grid(True, which="both", ls="-")
     if not y_max is None:
         plt.ylim(0.001, y_max)
     plt.tight_layout()
@@ -225,8 +264,8 @@ def plot_multi_legend(to_plt, xs, x_label, experiment, y_max=None):
     linestyles = linestyles_8
     if len(to_plt) == 6:
         colors = colors_6
-        markers = markers_8
-        linestyles = linestyles_8
+        markers = markers_6
+        linestyles = linestyles_6
 
     plt.figure(figsize=(10, 5))
     plt.rcParams.update({'font.size': font_size})
@@ -256,8 +295,8 @@ def plot_speedup(to_plt, xs, x_label, experiment, y_max=None):
     linestyles = linestyles_8
     if len(to_plt) == 6:
         colors = colors_6
-        markers = markers_8
-        linestyles = linestyles_8
+        markers = markers_6
+        linestyles = linestyles_6
 
     _, base = to_plt[0]
 
@@ -272,8 +311,9 @@ def plot_speedup(to_plt, xs, x_label, experiment, y_max=None):
     plt.gcf().subplots_adjust(left=0.14)
     plt.ylabel('factor of speedup')
     plt.xlabel(x_label)
+    plt.grid(True, which="both", ls="-")
     if not y_max is None:
-        plt.ylim(0, 8000)
+        plt.ylim(0, 6000)
     plt.tight_layout()
     plt.savefig("plots/" + experiment + "_speedup.pdf")
     plt.clf()
@@ -288,8 +328,8 @@ def plot_speedup_legend(to_plt, xs, x_label, experiment, y_max=None):
     linestyles = linestyles_8
     if len(to_plt) == 6:
         colors = colors_6
-        markers = markers_8
-        linestyles = linestyles_8
+        markers = markers_6
+        linestyles = linestyles_6
 
     _, base = to_plt[0]
 
@@ -463,7 +503,7 @@ def run_diff_d_param():
                                          termination_rounds, cl, std, dims_pr_cl, round)
                 avg_running_time += running_time
 
-            avg_running_time /= rounds
+            avg_running_time /= (rounds * 9)
             avg_running_times.append(avg_running_time)
         to_plt.append((algo_name, avg_running_times))
 
@@ -503,7 +543,7 @@ def run_diff_n_param_large():
 
             print(running_times)
 
-            avg_running_time /= rounds
+            avg_running_time /= (rounds * 9)
             avg_running_times.append(avg_running_time)
         avg_running_times = list(reversed(avg_running_times))
         to_plt.append((algo_name, avg_running_times))
@@ -539,7 +579,7 @@ def run_diff_d_param_large():
                                          termination_rounds, cl, std, dims_pr_cl, round)
                 avg_running_time += running_time
 
-            avg_running_time /= rounds
+            avg_running_time /= (rounds * 9)
             avg_running_times.append(avg_running_time)
         to_plt.append((algo_name, avg_running_times))
 
