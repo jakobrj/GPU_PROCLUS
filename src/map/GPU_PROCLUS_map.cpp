@@ -19,4 +19,6 @@ m.def("GPU_PROCLUS",    &GPU_PROCLUS,    "");
 m.def("GPU_PROCLUS_KEEP",    &GPU_PROCLUS_KEEP,    "");
 m.def("GPU_PROCLUS_SAVE",    &GPU_PROCLUS_SAVE,    "");
 m.def("GPU_PROCLUS_PARAM",    &GPU_PROCLUS_PARAM,    "");
+m.def("GPU_PROCLUS_PARAM_2",    &GPU_PROCLUS_PARAM_2,    "");
+m.def("GPU_PROCLUS_PARAM_3",    &GPU_PROCLUS_PARAM_3,    "");
 }

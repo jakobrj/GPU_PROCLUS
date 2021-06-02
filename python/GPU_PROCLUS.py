@@ -139,3 +139,9 @@ def GPU_PROCLUS_SAVE(X, k, l, a, b, min_deviation, termination_rounds, debug=Fal
 
 def GPU_PROCLUS_PARAM(X, ks, ls, a, b, min_deviation, termination_rounds):
     return impl.GPU_PROCLUS_PARAM(X, ks, ls, a, b, min_deviation, termination_rounds)
+
+def GPU_PROCLUS_PARAM_2(X, ks, ls, a, b, min_deviation, termination_rounds):
+    return impl.GPU_PROCLUS_PARAM_2(X, ks, ls, a, b, min_deviation, termination_rounds)
+
+def GPU_PROCLUS_PARAM_3(X, ks, ls, a, b, min_deviation, termination_rounds):
+    return impl.GPU_PROCLUS_PARAM_3(X, ks, ls, a, b, min_deviation, termination_rounds)

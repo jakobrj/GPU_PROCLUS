@@ -186,7 +186,7 @@ def run_param(algorithm, experiment, method, n, d, k, l, a, b, min_deviation, te
 
         GPU_PROCLUS(X_, 1, 1, 5, 4, min_deviation, termination_rounds)
         t0 = time.time()
-        if method == "GPU-PROCLUS-PARAM" or method == "PROCLUS-PARAM":
+        if method == "GPU-PROCLUS-PARAM" or method == "GPU-PROCLUS-PARAM_2" or method == "GPU-PROCLUS-PARAM_3" or method == "PROCLUS-PARAM":
             _ = algorithm(X, [k + 1, k, k - 1], [l + 1, l, l - 1], a, b, min_deviation, termination_rounds)
         else:
             for k_i in [k + 1, k, k - 1]:
@@ -448,7 +448,8 @@ def run_diff_n_param():
     for algo, algo_name in [(PROCLUS, "PROCLUS"), (PROCLUS_KEEP, "PROCLUS-KEEP"),
                             (PROCLUS_SAVE, "PROCLUS-SAVE"), (PROCLUS_PARAM, "PROCLUS-PARAM"),
                             (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_PROCLUS_KEEP, "GPU-PROCLUS-KEEP"),
-                            (GPU_PROCLUS_SAVE, "GPU-PROCLUS-SAVE"), (GPU_PROCLUS_PARAM, "GPU-PROCLUS-PARAM")]:
+                            (GPU_PROCLUS_SAVE, "GPU-PROCLUS-SAVE"), (GPU_PROCLUS_PARAM, "GPU-PROCLUS-PARAM"),
+                            (GPU_PROCLUS_PARAM_2, "GPU-PROCLUS-PARAM_2"), (GPU_PROCLUS_PARAM_3, "GPU-PROCLUS-PARAM_3")]:
         avg_running_times = []
         for n in reversed(ns):
             # cl = max(1, n//4000)
@@ -870,5 +871,7 @@ elif experiment == "inc_std":
 elif experiment == "large":
     run_diff_n_param_large()
     run_diff_d_param_large()
-
+elif experiment == "param":
+    run_diff_n_param()
+    run_diff_d_param()
 # real world
