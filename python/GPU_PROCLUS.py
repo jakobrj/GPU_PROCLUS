@@ -90,7 +90,7 @@ def load_skyserver_1x1():
     m_list = []
     for r in ["(10_11_10_11)"]:
         m_list.append(
-            torch.from_numpy(np.loadtxt("data/real/skyserver/result " + r + ".csv", delimiter=',', skiprows=1)).float())
+            torch.from_numpy(np.loadtxt("data/real/skyserver/result " + r + ".csv", delimiter=',', skiprows=2)).float())
     m = torch.cat(m_list)
     return normalize(m)
 
@@ -99,7 +99,7 @@ def load_skyserver_5x5():
     m_list = []
     for r in ["(10_15_10_11)", "(10_15_11_12)", "(10_15_12_13)", "(10_15_13_14)", "(10_15_14_15)"]:
         m_list.append(
-            torch.from_numpy(np.loadtxt("data/real/skyserver/result " + r + ".csv", delimiter=',', skiprows=1)).float())
+            torch.from_numpy(np.loadtxt("data/real/skyserver/result " + r + ".csv", delimiter=',', skiprows=2)).float())
     m = torch.cat(m_list)
     return normalize(m)
 
@@ -111,7 +111,7 @@ def load_skyserver_10x10():
               "(15_20_10_11)", "(15_20_11_12)", "(15_20_12_13)", "(15_20_13_14)", "(15_20_14_15)",
               "(15_20_15_16)", "(15_20_16_17)", "(15_20_17_18)", "(15_20_18_19)", "(15_20_19_20)"]:
         m_list.append(
-            torch.from_numpy(np.loadtxt("data/real/skyserver/result " + r + ".csv", delimiter=',', skiprows=1)).float())
+            torch.from_numpy(np.loadtxt("data/real/skyserver/result " + r + ".csv", delimiter=',', skiprows=2)).float())
     m = torch.cat(m_list)
     return normalize(m)
 
