@@ -7,9 +7,10 @@ import matplotlib.pyplot as plt
 
 
 def run(method, X):
+    print(X.size())
     k = 10
     l = 5
-    a = min(100, X.shape[0]//k)
+    a = min(100, X.shape[0] // k)
     b = 10
     min_deviation = 0.7
     termination_rounds = 5
@@ -27,7 +28,8 @@ def run(method, X):
 
 
 def runs(method):
-    r = [run(method, load_data()) for load_data in (load_glass, load_vowel, load_pendigits, load_skyserver_1x1)]
+    r = [run(method, load_data()) for load_data in
+         (load_glass, load_vowel, load_pendigits, load_skyserver_1x1, load_skyserver_5x5, load_skyserver_10x10)]
     print(r)
     return r
 
@@ -47,10 +49,10 @@ termination_rounds = 5
 # do one run just to get the GPU started and get more correct measurements
 GPU_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds)
 
-labels = ["glass", "vowel", "pendigits", "sky 1x1"]
+labels = ["glass", "vowel", "pendigits", "sky 1x1", "sky 5x5", "sky 10x10"]
 ra = np.arange(len(labels))
 fig, ax = plt.subplots(figsize=(8, 5))
-width = 1./7.
+width = 1. / 7.
 
 rects1 = ax.bar(ra - 5 * width / 2, runs(PROCLUS), width=width, label="PROCLUS")
 rects2 = ax.bar(ra - 3 * width / 2, runs(PROCLUS_KEEP), width=width, label="PROCLUS-KEEP")

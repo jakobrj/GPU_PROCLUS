@@ -88,11 +88,33 @@ def load_skyserver_0_5x0_5():
 
 def load_skyserver_1x1():
     m_list = []
-    for r in ["(0_0.5_0_0.5)", "(0_0.5_0.5_1)", "(0.5_1_0_0.5)", "(0.5_1_0.5_1)"]:
+    for r in ["(10_11_10_11)"]:
         m_list.append(
             torch.from_numpy(np.loadtxt("data/real/skyserver/result " + r + ".csv", delimiter=',', skiprows=1)).float())
     m = torch.cat(m_list)
     return normalize(m)
+
+
+def load_skyserver_5x5():
+    m_list = []
+    for r in ["(10_15_10_11)", "(10_15_11_12)", "(10_15_12_13)", "(10_15_13_14)", "(10_15_14_15)"]:
+        m_list.append(
+            torch.from_numpy(np.loadtxt("data/real/skyserver/result " + r + ".csv", delimiter=',', skiprows=1)).float())
+    m = torch.cat(m_list)
+    return normalize(m)
+
+
+def load_skyserver_10x10():
+    m_list = []
+    for r in ["(10_15_10_11)", "(10_15_11_12)", "(10_15_12_13)", "(10_15_13_14)", "(10_15_14_15)",
+              "(10_15_15_16)", "(10_15_16_17)", "(10_15_17_18)", "(10_15_18_19)", "(10_15_19_20)",
+              "(15_20_10_11)", "(15_20_11_12)", "(15_20_12_13)", "(15_20_13_14)", "(15_20_14_15)",
+              "(15_20_15_16)", "(15_20_16_17)", "(15_20_17_18)", "(15_20_18_19)", "(15_20_19_20)"]:
+        m_list.append(
+            torch.from_numpy(np.loadtxt("data/real/skyserver/result " + r + ".csv", delimiter=',', skiprows=1)).float())
+    m = torch.cat(m_list)
+    return normalize(m)
+
 
 t0 = time.time()
 print("Compiling our c++/cuda code, this usually takes 1-2 min. ")
