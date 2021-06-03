@@ -2313,3 +2313,454 @@ GPU_PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, flo
 
     return R;
 }
+
+
+
+std::vector <std::vector<at::Tensor>>
+GPU_PROCLUS_PARAM_2(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a, float b, float min_deviation,
+                  int termination_rounds) {
+    cudaDeviceSynchronize();
+//    cudaProfilerStart();
+
+    //getting constants
+    int k_max = ks[0];
+    int l_max = ls[0];
+
+    int n = data.size(0);
+    int d = data.size(1);
+    int Ak = min(n, int(a * k_max));
+    int Bk = min(n, int(b * k_max));
+
+    //copying data to the GPU
+    float *d_data = copy_to_flatten_device(data, n, d);
+
+    //initializing random generator for cuda
+    curandState *d_state;
+    cudaMalloc(&d_state, BLOCK_SIZE * sizeof(curandState));
+    init_seed << < 1, BLOCK_SIZE >> > (d_state, 42);
+
+    //initializing cuda arrays
+    bool *d_bad = device_allocate_bool(k_max);
+    int *d_C = device_allocate_int(k_max * n);
+    int *d_C_sizes = device_allocate_int(k_max);
+    int *d_C_best = device_allocate_int(n * k_max);
+    int *d_C_sizes_best = device_allocate_int(k_max);
+    int *d_C_result = device_allocate_int(n);
+    float *d_cost = device_allocate_float(1);
+    float *d_cost_best = device_allocate_float(1);
+    bool *d_D = device_allocate_bool(k_max * d);
+    int *d_Ds = device_allocate_int(k_max * d);
+    int *d_D_sizes = device_allocate_int(k_max);
+    float *d_delta = device_allocate_float(k_max);
+    float *d_delta_old = device_allocate_float_zero(Bk);
+    float *d_dist_n_Bk = device_allocate_float_zero(n * Bk);
+    bool *d_dist_n_Bk_set = device_allocate_bool_zero(Bk);
+    float *d_H = device_allocate_float_zero(Bk * d);
+    int *d_L = device_allocate_int(n * k_max);
+    int *d_L_sizes = device_allocate_int_zero(Bk);
+    int *d_L_sizes_change = device_allocate_int(k_max);
+    int *d_lambda = device_allocate_int(k_max);
+    int *d_lock = device_allocate_int(n);
+    int *d_M_best = device_allocate_int(k_max);
+    int *d_M_current = device_allocate_int(k_max);
+    int *d_M_idx = device_allocate_int(k_max);
+    int *d_M_idx_best = device_allocate_int(k_max);
+    int *d_M_random = device_allocate_int(Bk);
+    int *d_S = device_allocate_int(n);
+    float *d_sigma = device_allocate_float(k_max);
+    int *d_termination_criterion = device_allocate_int_zero(1);
+    float *d_X = device_allocate_float(k_max * d);
+    float *d_Z = device_allocate_float(k_max * d);
+
+    //// Initialization Phase ////
+    fill_with_indices(d_S, n);
+    gpu_random_sample_locked(d_S, Ak, n, d_state, d_lock);
+
+    int *d_M = gpu_greedy(d_data, d_S, Bk, Ak, d, n);
+
+    //// Iterative Phase ///
+    int number_of_blocks = Bk / BLOCK_SIZE;
+    if (Bk % BLOCK_SIZE) number_of_blocks++;
+    set_all << < number_of_blocks, min(Bk, BLOCK_SIZE) >> > (d_delta_old, -1., Bk);
+
+    std::vector <std::vector<at::Tensor>> R;
+
+    for (int k_idx = 0; k_idx < ks.size(); k_idx++) {
+        int k = ks[k_idx];
+        for (int l_idx = 0; l_idx < ls.size(); l_idx++) {
+            int l = ls[l_idx];
+
+            //if (l_idx == 0 & k_idx == 0) {
+            fill_with_indices(d_M_random, Bk);
+            gpu_random_sample_locked(d_M_random, k_max, Bk, d_state, d_lock);
+
+            gpu_gather_1d(d_M_current, d_M, d_M_random, k_max);
+            cudaMemcpy(d_M_idx, d_M_random, k_max * sizeof(int), cudaMemcpyDeviceToDevice);
+            cudaMemcpy(d_M_best, d_M_current, k * sizeof(int), cudaMemcpyDeviceToDevice);
+            cudaMemcpy(d_M_idx_best, d_M_idx, k * sizeof(int), cudaMemcpyDeviceToDevice);
+//            } else {
+//                cudaMemcpy(d_M_current, d_M_best, k * sizeof(int), cudaMemcpyDeviceToDevice);
+//                cudaMemcpy(d_M_idx, d_M_idx_best, k * sizeof(int), cudaMemcpyDeviceToDevice);
+//            }
+
+            int termination_criterion = 0;
+            set(d_cost_best, 0, 1000000.);
+            cudaMemset(d_termination_criterion, 0, sizeof(float));
+
+            while (termination_criterion < termination_rounds) {
+
+                //// compute L ////
+                gpu_compute_L_save(d_L, d_L_sizes_change, d_L_sizes, d_lambda,
+                                   d_dist_n_Bk, d_dist_n_Bk_set,
+                                   d_delta_old, d_delta,
+                                   d_M, d_M_idx,
+                                   d_data,
+                                   n, d, k);
+
+                //// find dimensions ////
+                gpu_find_dimensions_save(d_D, d_Z, d_X, d_H,
+                                         d_L, d_L_sizes_change, d_L_sizes, d_lambda,
+                                         d_M_current, d_M_idx,
+                                         d_data,
+                                         n, d, k, l);
+
+                //// assign points /////
+                gpu_assign_points(d_C, d_C_sizes,
+                                  d_D, d_Ds, d_D_sizes,
+                                  d_M_current,
+                                  d_data,
+                                  n, d, k);
+
+                //// evaluate clustering ////
+                gpu_evaluate_cluster(d_cost,
+                                     d_C, d_C_sizes,
+                                     d_D, d_D_sizes,
+                                     d_data,
+                                     n, d, k);
+
+                //// update best ////
+                termination_criterion += 1;
+                gpu_update_best_SAVE(d_M_idx, d_M_idx_best, d_cost, d_cost_best,
+                                     d_termination_criterion,
+                                     d_M_best, d_M_current,
+                                     d_C, d_C_sizes, d_C_best, d_C_sizes_best,
+                                     d_bad,
+                                     min_deviation, n, k);
+
+                if (termination_criterion >= termination_rounds) {
+                    //only read from device version of termination_criterion as few times as possible
+                    cudaMemcpy(&termination_criterion, d_termination_criterion, sizeof(int), cudaMemcpyDeviceToHost);
+                }
+
+                //replace bad medoids
+                gpu_random_sample_locked(d_M_random, k, Bk, d_state, d_lock);
+                gpu_replace_medoids_kernel_pre << < 1, 1 >> > (d_M_idx, d_M_idx_best, d_M_current, d_M_random, d_M, Bk,
+                        d_M_best, d_bad, k, n);
+
+            }
+
+            //// Refinement Phase ////
+            gpu_find_dimensions(d_D, d_Z, d_X,
+                                d_C_best, d_C_sizes_best,
+                                d_M_best,
+                                d_data,
+                                n, d, k, l);
+
+            gpu_assign_points(d_C_best, d_C_sizes_best,
+                              d_D, d_Ds, d_D_sizes,
+                              d_M_best,
+                              d_data,
+                              n, d, k);
+
+            remove_outliers(d_C_result, d_C_best, d_C_sizes_best,
+                            d_D,
+                            d_delta,
+                            d_M_best,
+                            d_data,
+                            n, d, k);
+
+            // building result
+            std::vector <at::Tensor> r;
+
+            torch::Tensor M_Tensor = torch::zeros({k}, torch::kInt32);
+            torch::Tensor D_Tensor = torch::zeros({k, d}, torch::kBool);
+            torch::Tensor C_Tensor = torch::zeros({n}, torch::kInt32);
+
+            cudaMemcpy(M_Tensor.data_ptr<int>(), d_M_best, k * sizeof(int), cudaMemcpyDeviceToHost);
+            cudaMemcpy(D_Tensor.data_ptr<bool>(), d_D, k * d * sizeof(bool), cudaMemcpyDeviceToHost);
+            cudaMemcpy(C_Tensor.data_ptr<int>(), d_C_result, n * sizeof(int), cudaMemcpyDeviceToHost);
+
+            r.push_back(M_Tensor);
+            r.push_back(D_Tensor);
+            r.push_back(C_Tensor);
+
+            R.push_back(r);
+        }
+    }
+
+    // free all
+    cudaFree(d_bad);
+    cudaFree(d_C);
+    cudaFree(d_C_sizes);
+    cudaFree(d_C_best);
+    cudaFree(d_C_sizes_best);
+    cudaFree(d_C_result);
+    cudaFree(d_cost);
+    cudaFree(d_cost_best);
+    cudaFree(d_D);
+    cudaFree(d_Ds);
+    cudaFree(d_D_sizes);
+    cudaFree(d_data);
+    cudaFree(d_delta);
+    cudaFree(d_delta_old);
+    cudaFree(d_dist_n_Bk);
+    cudaFree(d_dist_n_Bk_set);
+    cudaFree(d_H);
+    cudaFree(d_L);
+    cudaFree(d_L_sizes);
+    cudaFree(d_L_sizes_change);
+    cudaFree(d_lambda);
+    cudaFree(d_lock);
+    cudaFree(d_M);
+    cudaFree(d_M_best);
+    cudaFree(d_M_current);
+    cudaFree(d_M_idx);
+    cudaFree(d_M_idx_best);
+    cudaFree(d_M_random);
+    cudaFree(d_S);
+    cudaFree(d_sigma);
+    cudaFree(d_state);
+    cudaFree(d_termination_criterion);
+    cudaFree(d_X);
+    cudaFree(d_Z);
+
+    cudaDeviceSynchronize();
+    gpuErrchk(cudaPeekAtLastError());
+//    cudaProfilerStop();
+
+    return R;
+}
+
+
+
+std::vector <std::vector<at::Tensor>>
+GPU_PROCLUS_PARAM_3(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a, float b, float min_deviation,
+                    int termination_rounds) {
+    cudaDeviceSynchronize();
+//    cudaProfilerStart();
+
+    //getting constants
+    int k_max = ks[0];
+    int l_max = ls[0];
+
+    int n = data.size(0);
+    int d = data.size(1);
+    int Ak = min(n, int(a * k_max));
+    int Bk = min(n, int(b * k_max));
+
+    //copying data to the GPU
+    float *d_data = copy_to_flatten_device(data, n, d);
+
+    //initializing random generator for cuda
+    curandState *d_state;
+    cudaMalloc(&d_state, BLOCK_SIZE * sizeof(curandState));
+    init_seed << < 1, BLOCK_SIZE >> > (d_state, 42);
+
+    //initializing cuda arrays
+    bool *d_bad = device_allocate_bool(k_max);
+    int *d_C = device_allocate_int(k_max * n);
+    int *d_C_sizes = device_allocate_int(k_max);
+    int *d_C_best = device_allocate_int(n * k_max);
+    int *d_C_sizes_best = device_allocate_int(k_max);
+    int *d_C_result = device_allocate_int(n);
+    float *d_cost = device_allocate_float(1);
+    float *d_cost_best = device_allocate_float(1);
+    bool *d_D = device_allocate_bool(k_max * d);
+    int *d_Ds = device_allocate_int(k_max * d);
+    int *d_D_sizes = device_allocate_int(k_max);
+    float *d_delta = device_allocate_float(k_max);
+    float *d_delta_old = device_allocate_float_zero(Bk);
+    float *d_dist_n_Bk = device_allocate_float_zero(n * Bk);
+    bool *d_dist_n_Bk_set = device_allocate_bool_zero(Bk);
+    float *d_H = device_allocate_float_zero(Bk * d);
+    int *d_L = device_allocate_int(n * k_max);
+    int *d_L_sizes = device_allocate_int_zero(Bk);
+    int *d_L_sizes_change = device_allocate_int(k_max);
+    int *d_lambda = device_allocate_int(k_max);
+    int *d_lock = device_allocate_int(n);
+    int *d_M_best = device_allocate_int(k_max);
+    int *d_M_current = device_allocate_int(k_max);
+    int *d_M_idx = device_allocate_int(k_max);
+    int *d_M_idx_best = device_allocate_int(k_max);
+    int *d_M_random = device_allocate_int(Bk);
+    int *d_S = device_allocate_int(n);
+    float *d_sigma = device_allocate_float(k_max);
+    int *d_termination_criterion = device_allocate_int_zero(1);
+    float *d_X = device_allocate_float(k_max * d);
+    float *d_Z = device_allocate_float(k_max * d);
+
+
+
+    std::vector <std::vector<at::Tensor>> R;
+
+    for (int k_idx = 0; k_idx < ks.size(); k_idx++) {
+        int k = ks[k_idx];
+        for (int l_idx = 0; l_idx < ls.size(); l_idx++) {
+            int l = ls[l_idx];
+
+            Ak = a * k;
+            Bk = b * k;
+            //// Initialization Phase ////
+            fill_with_indices(d_S, n);
+            gpu_random_sample_locked(d_S, Ak, n, d_state, d_lock);
+
+            int *d_M = gpu_greedy(d_data, d_S, Bk, Ak, d, n);
+
+            //// Iterative Phase ///
+            fill_with_indices(d_M_random, Bk);
+            gpu_random_sample_locked(d_M_random, k, Bk, d_state, d_lock);
+
+            gpu_gather_1d(d_M_current, d_M, d_M_random, k);
+            cudaMemcpy(d_M_idx, d_M_random, k * sizeof(int), cudaMemcpyDeviceToDevice);
+
+            int number_of_blocks = Bk / BLOCK_SIZE;
+            if (Bk % BLOCK_SIZE) number_of_blocks++;
+            set_all << < number_of_blocks, min(Bk, BLOCK_SIZE) >> > (d_delta_old, -1., Bk);
+
+            int termination_criterion = 0;
+            set(d_cost_best, 0, 1000000.);
+            cudaMemset(d_termination_criterion, 0, sizeof(float));
+
+            while (termination_criterion < termination_rounds) {
+
+                //// compute L ////
+                gpu_compute_L_save(d_L, d_L_sizes_change, d_L_sizes, d_lambda,
+                                   d_dist_n_Bk, d_dist_n_Bk_set,
+                                   d_delta_old, d_delta,
+                                   d_M, d_M_idx,
+                                   d_data,
+                                   n, d, k);
+
+                //// find dimensions ////
+                gpu_find_dimensions_save(d_D, d_Z, d_X, d_H,
+                                         d_L, d_L_sizes_change, d_L_sizes, d_lambda,
+                                         d_M_current, d_M_idx,
+                                         d_data,
+                                         n, d, k, l);
+
+                //// assign points /////
+                gpu_assign_points(d_C, d_C_sizes,
+                                  d_D, d_Ds, d_D_sizes,
+                                  d_M_current,
+                                  d_data,
+                                  n, d, k);
+
+                //// evaluate clustering ////
+                gpu_evaluate_cluster(d_cost,
+                                     d_C, d_C_sizes,
+                                     d_D, d_D_sizes,
+                                     d_data,
+                                     n, d, k);
+
+                //// update best ////
+                termination_criterion += 1;
+                gpu_update_best_SAVE(d_M_idx, d_M_idx_best, d_cost, d_cost_best,
+                                     d_termination_criterion,
+                                     d_M_best, d_M_current,
+                                     d_C, d_C_sizes, d_C_best, d_C_sizes_best,
+                                     d_bad,
+                                     min_deviation, n, k);
+
+                if (termination_criterion >= termination_rounds) {
+                    //only read from device version of termination_criterion as few times as possible
+                    cudaMemcpy(&termination_criterion, d_termination_criterion, sizeof(int), cudaMemcpyDeviceToHost);
+                }
+
+                //replace bad medoids
+                gpu_random_sample_locked(d_M_random, k, Bk, d_state, d_lock);
+                gpu_replace_medoids_kernel_pre << < 1, 1 >> > (d_M_idx, d_M_idx_best, d_M_current, d_M_random, d_M, Bk,
+                        d_M_best, d_bad, k, n);
+
+            }
+
+            //// Refinement Phase ////
+            gpu_find_dimensions(d_D, d_Z, d_X,
+                                d_C_best, d_C_sizes_best,
+                                d_M_best,
+                                d_data,
+                                n, d, k, l);
+
+            gpu_assign_points(d_C_best, d_C_sizes_best,
+                              d_D, d_Ds, d_D_sizes,
+                              d_M_best,
+                              d_data,
+                              n, d, k);
+
+            remove_outliers(d_C_result, d_C_best, d_C_sizes_best,
+                            d_D,
+                            d_delta,
+                            d_M_best,
+                            d_data,
+                            n, d, k);
+
+            // building result
+            std::vector <at::Tensor> r;
+
+            torch::Tensor M_Tensor = torch::zeros({k}, torch::kInt32);
+            torch::Tensor D_Tensor = torch::zeros({k, d}, torch::kBool);
+            torch::Tensor C_Tensor = torch::zeros({n}, torch::kInt32);
+
+            cudaMemcpy(M_Tensor.data_ptr<int>(), d_M_best, k * sizeof(int), cudaMemcpyDeviceToHost);
+            cudaMemcpy(D_Tensor.data_ptr<bool>(), d_D, k * d * sizeof(bool), cudaMemcpyDeviceToHost);
+            cudaMemcpy(C_Tensor.data_ptr<int>(), d_C_result, n * sizeof(int), cudaMemcpyDeviceToHost);
+
+            r.push_back(M_Tensor);
+            r.push_back(D_Tensor);
+            r.push_back(C_Tensor);
+
+            R.push_back(r);
+            cudaFree(d_M);
+        }
+    }
+
+    // free all
+    cudaFree(d_bad);
+    cudaFree(d_C);
+    cudaFree(d_C_sizes);
+    cudaFree(d_C_best);
+    cudaFree(d_C_sizes_best);
+    cudaFree(d_C_result);
+    cudaFree(d_cost);
+    cudaFree(d_cost_best);
+    cudaFree(d_D);
+    cudaFree(d_Ds);
+    cudaFree(d_D_sizes);
+    cudaFree(d_data);
+    cudaFree(d_delta);
+    cudaFree(d_delta_old);
+    cudaFree(d_dist_n_Bk);
+    cudaFree(d_dist_n_Bk_set);
+    cudaFree(d_H);
+    cudaFree(d_L);
+    cudaFree(d_L_sizes);
+    cudaFree(d_L_sizes_change);
+    cudaFree(d_lambda);
+    cudaFree(d_lock);
+    cudaFree(d_M_best);
+    cudaFree(d_M_current);
+    cudaFree(d_M_idx);
+    cudaFree(d_M_idx_best);
+    cudaFree(d_M_random);
+    cudaFree(d_S);
+    cudaFree(d_sigma);
+    cudaFree(d_state);
+    cudaFree(d_termination_criterion);
+    cudaFree(d_X);
+    cudaFree(d_Z);
+
+    cudaDeviceSynchronize();
+    gpuErrchk(cudaPeekAtLastError());
+//    cudaProfilerStop();
+
+    return R;
+}
