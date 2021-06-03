@@ -15,7 +15,7 @@ def run(method, X):
     min_deviation = 0.7
     termination_rounds = 5
 
-    rounds = 20
+    rounds = 2
 
     total = 0.
     for _ in range(rounds):
