@@ -15,10 +15,11 @@ def run(method, X):
     min_deviation = 0.7
     termination_rounds = 5
 
-    rounds = 2
+    rounds = 20
 
     total = 0.
     for _ in range(rounds):
+        print("round:", _)
         t0 = time.time()
         method(X, k, l, a, b, min_deviation, termination_rounds)
         t1 = time.time()
