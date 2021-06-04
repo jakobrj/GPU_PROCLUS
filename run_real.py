@@ -55,13 +55,34 @@ ra = np.arange(len(labels))
 fig, ax = plt.subplots(figsize=(8, 5))
 width = 1. / 7.
 
-rects1 = ax.bar(ra - 5 * width / 2, runs(PROCLUS), width=width, label="PROCLUS")
-rects2 = ax.bar(ra - 3 * width / 2, runs(PROCLUS_KEEP), width=width, label="PROCLUS-KEEP")
-rects3 = ax.bar(ra - width / 2, runs(PROCLUS_SAVE), width=width, label="PROCLUS-SAVE")
-runs(GPU_PROCLUS)
-rects4 = ax.bar(ra + width / 2, runs(GPU_PROCLUS), width=width, label="GPU-PROCLUS")
-rects5 = ax.bar(ra + 3 * width / 2, runs(GPU_PROCLUS_KEEP), width=width, label="GPU-PROCLUS-KEEP")
-rects6 = ax.bar(ra + 5 * width / 2, runs(GPU_PROCLUS_SAVE), width=width, label="GPU-PROCLUS-SAVE")
+PROCLUS_times = runs(PROCLUS)
+rects1 = ax.bar(ra - 5 * width / 2, PROCLUS_times, width=width, label="PROCLUS")
+PROCLUS_KEEP_times = runs(PROCLUS_KEEP)
+rects2 = ax.bar(ra - 3 * width / 2, PROCLUS_KEEP_times, width=width, label="PROCLUS-KEEP")
+PROCLUS_SAVE_times = runs(PROCLUS_SAVE)
+rects3 = ax.bar(ra - width / 2, PROCLUS_SAVE_times, width=width, label="PROCLUS-SAVE")
+
+run(GPU_PROCLUS, load_glass())
+
+GPU_PROCLUS_times = runs(GPU_PROCLUS)
+rects4 = ax.bar(ra + width / 2, GPU_PROCLUS_times, width=width, label="GPU-PROCLUS")
+GPU_PROCLUS_KEEP_times = runs(GPU_PROCLUS_KEEP)
+rects5 = ax.bar(ra + 3 * width / 2, GPU_PROCLUS_KEEP_times, width=width, label="GPU-PROCLUS-KEEP")
+GPU_PROCLUS_SAVE_times = runs(GPU_PROCLUS_SAVE)
+rects6 = ax.bar(ra + 5 * width / 2, GPU_PROCLUS_SAVE_times, width=width, label="GPU-PROCLUS-SAVE")
+
+print("PROCLUS:", PROCLUS_times)
+print("PROCLUS-KEEP:", PROCLUS_KEEP_times)
+print("PROCLUS-SAVE:", PROCLUS_SAVE_times)
+
+print("GPU-PROCLUS:", GPU_PROCLUS_times)
+print("GPU-PROCLUS-KEEP:", GPU_PROCLUS_KEEP_times)
+print("GPU-PROCLUS-SAVE:", GPU_PROCLUS_SAVE_times)
+
+np.savez("experiments_data/real.npz",
+         PROCLUS_times=PROCLUS_times, PROCLUS_KEEP_times=PROCLUS_KEEP_times, PROCLUS_SAVE_times=PROCLUS_SAVE_times,
+         GPU_PROCLUS_times=GPU_PROCLUS_times, GPU_PROCLUS_KEEP_times=GPU_PROCLUS_KEEP_times,
+         GPU_PROCLUS_SAVE_times=GPU_PROCLUS_SAVE_times)
 
 ax.set_xticks(ra)
 ax.set_xticklabels(labels)
