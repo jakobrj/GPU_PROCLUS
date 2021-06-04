@@ -52,20 +52,6 @@ def run_param(method, X):
     return avg
 
 
-def runs(method):
-    r = [run(method, load_data()) for load_data in
-         (load_glass, load_vowel, load_pendigits, load_skyserver_1x1, load_skyserver_5x5, load_skyserver_10x10)]
-    print(r)
-    return r
-
-
-def runs_param(method):
-    r = [run_param(method, load_data()) for load_data in
-         (load_glass, load_vowel, load_pendigits, load_skyserver_1x1, load_skyserver_5x5, load_skyserver_10x10)]
-    print(r)
-    return r
-
-
 if not os.path.exists('plots/'):
     os.makedirs('plots/')
 
@@ -79,35 +65,42 @@ min_deviation = 0.7
 termination_rounds = 5
 
 # do one run just to get the GPU started and get more correct measurements
-GPU_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds)
-
 labels = ["glass", "vowel", "pendigits", "sky 1x1", "sky 5x5", "sky 10x10"]
 ra = np.arange(len(labels))
 fig, ax = plt.subplots(figsize=(8, 5))
 width = 1. / 5.
 
-PROCLUS_times = runs(PROCLUS)
-rects1 = ax.bar(ra - 3 * width / 2, PROCLUS_times, width=width, label="PROCLUS")
-PROCLUS_PARAM_times = runs_param(PROCLUS_PARAM)
-rects3 = ax.bar(ra - width / 2, PROCLUS_PARAM_times, width=width, label="FAST-PROCLUS")
-
+PROCLUS_times = []#runs(PROCLUS)
+PROCLUS_PARAM_times = [] #runs_param(PROCLUS_PARAM)
+GPU_PROCLUS_times = [] #runs(GPU_PROCLUS)
+GPU_PROCLUS_PARAM_times = []#runs_param(GPU_PROCLUS_PARAM)
 run(GPU_PROCLUS, load_glass())
 
-GPU_PROCLUS_times = runs(GPU_PROCLUS)
+for load_data in [load_glass, load_vowel, load_pendigits, load_skyserver_1x1, load_skyserver_5x5, load_skyserver_10x10]
+
+    PROCLUS_times.append(run(PROCLUS, load_data()))
+    PROCLUS_PARAM_times.append(run_param(PROCLUS_PARAM, load_data()))
+    GPU_PROCLUS_times.append(run(GPU_PROCLUS, load_data()))
+    GPU_PROCLUS_PARAM_times.append(run_param(GPU_PROCLUS_PARAM, load_data()))
+
+    print("PROCLUS:", PROCLUS_times)
+    print("PROCLUS-SAVE:", PROCLUS_PARAM_times)
+    print("GPU-PROCLUS:", GPU_PROCLUS_times)
+    print("GPU-PROCLUS-PARAM:", GPU_PROCLUS_PARAM_times)
+
+    np.savez("experiments_data/real_param.npz",
+             PROCLUS_times=PROCLUS_times, PROCLUS_PARAM_times=PROCLUS_PARAM_times,
+             GPU_PROCLUS_times=GPU_PROCLUS_times,
+             GPU_PROCLUS_PARAM_times=GPU_PROCLUS_PARAM_times)
+
+
+rects1 = ax.bar(ra - 3 * width / 2, PROCLUS_times, width=width, label="PROCLUS")
+rects3 = ax.bar(ra - width / 2, PROCLUS_PARAM_times, width=width, label="FAST-PROCLUS")
 rects4 = ax.bar(ra + width / 2, GPU_PROCLUS_times, width=width, label="GPU-PROCLUS")
-GPU_PROCLUS_PARAM_times = runs_param(GPU_PROCLUS_PARAM)
 rects6 = ax.bar(ra + 3 * width / 2, GPU_PROCLUS_PARAM_times, width=width, label="GPU-FAST-PROCLUS")
 
-print("PROCLUS:", PROCLUS_times)
-print("PROCLUS-SAVE:", PROCLUS_PARAM_times)
 
-print("GPU-PROCLUS:", GPU_PROCLUS_times)
-print("GPU-PROCLUS-PARAM:", GPU_PROCLUS_PARAM_times)
 
-np.savez("experiments_data/real_param.npz",
-         PROCLUS_times=PROCLUS_times, PROCLUS_KEEP_times=PROCLUS_KEEP_times, PROCLUS_SAVE_times=PROCLUS_SAVE_times,
-         GPU_PROCLUS_times=GPU_PROCLUS_times, GPU_PROCLUS_KEEP_times=GPU_PROCLUS_KEEP_times,
-         GPU_PROCLUS_SAVE_times=GPU_PROCLUS_SAVE_times)
 
 ax.set_xticks(ra)
 ax.set_xticklabels(labels)
