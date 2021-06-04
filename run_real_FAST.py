@@ -48,7 +48,7 @@ def run_param(method, X):
         method(X, [k + 1, k, k - 1], [l + 1, l, l - 1], a, b, min_deviation, termination_rounds)
         t1 = time.time()
         total += t1 - t0
-    avg = total / (rounds*9)
+    avg = total / (rounds * 9)
     return avg
 
 
@@ -70,14 +70,13 @@ ra = np.arange(len(labels))
 fig, ax = plt.subplots(figsize=(8, 5))
 width = 1. / 5.
 
-PROCLUS_times = []#runs(PROCLUS)
-PROCLUS_PARAM_times = [] #runs_param(PROCLUS_PARAM)
-GPU_PROCLUS_times = [] #runs(GPU_PROCLUS)
-GPU_PROCLUS_PARAM_times = []#runs_param(GPU_PROCLUS_PARAM)
+PROCLUS_times = []  # runs(PROCLUS)
+PROCLUS_PARAM_times = []  # runs_param(PROCLUS_PARAM)
+GPU_PROCLUS_times = []  # runs(GPU_PROCLUS)
+GPU_PROCLUS_PARAM_times = []  # runs_param(GPU_PROCLUS_PARAM)
 run(GPU_PROCLUS, load_glass())
 
-for load_data in [load_glass, load_vowel, load_pendigits, load_skyserver_1x1, load_skyserver_5x5, load_skyserver_10x10]
-
+for load_data in [load_glass, load_vowel, load_pendigits, load_skyserver_1x1, load_skyserver_5x5, load_skyserver_10x10]:
     PROCLUS_times.append(run(PROCLUS, load_data()))
     PROCLUS_PARAM_times.append(run_param(PROCLUS_PARAM, load_data()))
     GPU_PROCLUS_times.append(run(GPU_PROCLUS, load_data()))
@@ -93,14 +92,10 @@ for load_data in [load_glass, load_vowel, load_pendigits, load_skyserver_1x1, lo
              GPU_PROCLUS_times=GPU_PROCLUS_times,
              GPU_PROCLUS_PARAM_times=GPU_PROCLUS_PARAM_times)
 
-
 rects1 = ax.bar(ra - 3 * width / 2, PROCLUS_times, width=width, label="PROCLUS")
 rects3 = ax.bar(ra - width / 2, PROCLUS_PARAM_times, width=width, label="FAST-PROCLUS")
 rects4 = ax.bar(ra + width / 2, GPU_PROCLUS_times, width=width, label="GPU-PROCLUS")
 rects6 = ax.bar(ra + 3 * width / 2, GPU_PROCLUS_PARAM_times, width=width, label="GPU-FAST-PROCLUS")
-
-
-
 
 ax.set_xticks(ra)
 ax.set_xticklabels(labels)
