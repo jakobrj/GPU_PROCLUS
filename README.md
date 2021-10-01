@@ -16,7 +16,7 @@ python run_example.py
 Running the script should take a couple of minutes and result in a plot of the average running times.
 The larger dataset is not a part of the example since it would take a long time to run.
 
-![plot](plots/example.png)
+![plot](example.png)
 
 ## Contact
 If you have any difficulties you can contact us at: jakobrj@cs.au.dk
