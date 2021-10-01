@@ -83,9 +83,9 @@ for load_data in [load_glass, load_vowel, load_pendigits, load_skyserver_1x1, lo
     GPU_PROCLUS_PARAM_times.append(run_param(GPU_PROCLUS_PARAM, load_data()))
 
     print("PROCLUS:", PROCLUS_times)
-    print("PROCLUS-SAVE:", PROCLUS_PARAM_times)
+    print("FAST-PROCLUS:", PROCLUS_PARAM_times)
     print("GPU-PROCLUS:", GPU_PROCLUS_times)
-    print("GPU-PROCLUS-PARAM:", GPU_PROCLUS_PARAM_times)
+    print("GPU-FAST-PROCLUS:", GPU_PROCLUS_PARAM_times)
 
     np.savez("experiments_data/real_param.npz",
              PROCLUS_times=PROCLUS_times, PROCLUS_PARAM_times=PROCLUS_PARAM_times,
@@ -99,7 +99,6 @@ rects6 = ax.bar(ra + 3 * width / 2, GPU_PROCLUS_PARAM_times, width=width, label=
 
 ax.set_xticks(ra)
 ax.set_xticklabels(labels)
-
 
 def autolabel(rects):
     """Attach a text label above each bar in *rects*, displaying its height."""
