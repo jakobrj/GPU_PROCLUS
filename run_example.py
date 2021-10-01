@@ -57,41 +57,23 @@ width = 1. / 7.
 
 PROCLUS_times = runs(PROCLUS)
 rects1 = ax.bar(ra - 5 * width / 2, PROCLUS_times, width=width, label="PROCLUS")
-PROCLUS_KEEP_times = runs(PROCLUS_KEEP)
-rects2 = ax.bar(ra - 3 * width / 2, PROCLUS_KEEP_times, width=width, label="FAST*-PROCLUS")
-PROCLUS_SAVE_times = runs(PROCLUS_SAVE)
-rects3 = ax.bar(ra - width / 2, PROCLUS_SAVE_times, width=width, label="FAST-PROCLUS")
+FAST_star_PROCLUS_times = runs(PROCLUS_KEEP)
+rects2 = ax.bar(ra - 3 * width / 2, FAST_star_PROCLUS_times, width=width, label="FAST*-PROCLUS")
+FAST_PROCLUS_times = runs(PROCLUS_SAVE)
+rects3 = ax.bar(ra - width / 2, FAST_PROCLUS_times, width=width, label="FAST-PROCLUS")
 
 run(GPU_PROCLUS, load_glass())
 
 GPU_PROCLUS_times = runs(GPU_PROCLUS)
 rects4 = ax.bar(ra + width / 2, GPU_PROCLUS_times, width=width, label="GPU-PROCLUS")
-GPU_PROCLUS_KEEP_times = runs(GPU_PROCLUS_KEEP)
-rects5 = ax.bar(ra + 3 * width / 2, GPU_PROCLUS_KEEP_times, width=width, label="GPU-FAST*-PROCLUS")
-GPU_PROCLUS_SAVE_times = runs(GPU_PROCLUS_SAVE)
-rects6 = ax.bar(ra + 5 * width / 2, GPU_PROCLUS_SAVE_times, width=width, label="GPU-FAST-PROCLUS")
+GPU_FAST_star_PROCLUS_times = runs(GPU_PROCLUS_KEEP)
+rects5 = ax.bar(ra + 3 * width / 2, GPU_FAST_star_PROCLUS_times, width=width, label="GPU-FAST*-PROCLUS")
+GPU_FAST_PROCLUS_times = runs(GPU_PROCLUS_SAVE)
+rects6 = ax.bar(ra + 5 * width / 2, GPU_FAST_PROCLUS_times, width=width, label="GPU-FAST-PROCLUS")
 
 ax.set_xticks(ra)
 ax.set_xticklabels(labels)
 
-
-def autolabel(rects):
-    """Attach a text label above each bar in *rects*, displaying its height."""
-    for rect in rects:
-        height = round(rect.get_height(), 3)
-        ax.annotate('{}'.format(height),
-                    xy=(rect.get_x() + rect.get_width() / 2, rect.get_height()),
-                    xytext=(0, 1),
-                    textcoords="offset points",
-                    ha='center', va='bottom')
-
-
-# autolabel(rects1)
-# autolabel(rects2)
-# autolabel(rects3)
-# autolabel(rects4)
-# autolabel(rects5)
-# autolabel(rects6)
 plt.ylabel('time in seconds')
 
 ax.legend()
