@@ -57,18 +57,18 @@ width = 1. / 7.
 
 PROCLUS_times = runs(PROCLUS)
 rects1 = ax.bar(ra - 5 * width / 2, PROCLUS_times, width=width, label="PROCLUS")
-FAST_star_PROCLUS_times = runs(PROCLUS_KEEP)
+FAST_star_PROCLUS_times = runs(FAST_star_PROCLUS)
 rects2 = ax.bar(ra - 3 * width / 2, FAST_star_PROCLUS_times, width=width, label="FAST*-PROCLUS")
-FAST_PROCLUS_times = runs(PROCLUS_SAVE)
+FAST_PROCLUS_times = runs(FAST_PROCLUS)
 rects3 = ax.bar(ra - width / 2, FAST_PROCLUS_times, width=width, label="FAST-PROCLUS")
 
 run(GPU_PROCLUS, load_glass())
 
 GPU_PROCLUS_times = runs(GPU_PROCLUS)
 rects4 = ax.bar(ra + width / 2, GPU_PROCLUS_times, width=width, label="GPU-PROCLUS")
-GPU_FAST_star_PROCLUS_times = runs(GPU_PROCLUS_KEEP)
+GPU_FAST_star_PROCLUS_times = runs(GPU_FAST_star_PROCLUS)
 rects5 = ax.bar(ra + 3 * width / 2, GPU_FAST_star_PROCLUS_times, width=width, label="GPU-FAST*-PROCLUS")
-GPU_FAST_PROCLUS_times = runs(GPU_PROCLUS_SAVE)
+GPU_FAST_PROCLUS_times = runs(GPU_FAST_PROCLUS)
 rects6 = ax.bar(ra + 5 * width / 2, GPU_FAST_PROCLUS_times, width=width, label="GPU-FAST-PROCLUS")
 
 ax.set_xticks(ra)
