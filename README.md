@@ -7,16 +7,16 @@ The implementation has only been tested on a workstation with Ubuntu 20.4 LTS an
 The important packages used are: torch=1.8.0, numpy=1.19.2, and matplotlib=3.3.4. However, it should work for newer versions as well.
 
 ## Example
-The implementation comes with three real-world datasets vowel, glass, and pendigits.
+The implementation comes with multiple real-world datasets.
 
 Run a small example with PROCLUS, FAST-PROCLUS, GPU-PROCLUS, and GPU-FAST-PRCLUS:
 ```
 python run_example.py
 ```
 Running the script should take a couple of minutes and result in a plot of the average running times.
-The pendigits dataset is not a part of the example since it would take around 8 hours for INSCY to process.
+The larger dataset is not a part of the example since it would take a long time to run.
 
-![plot](plots/example.pdf)
+![plot](plots/example.png)
 
 ## Contact
 If you have any difficulties you can contact us at: jakobrj@cs.au.dk
