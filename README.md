@@ -1,5 +1,5 @@
-# GPU-FAST-PROCLUS, GPU-PROCLUS and FAST-PROCLUS
-This repository contains the implementation of PROCLUS, FAST-PROCLUS, GPU-PROCLUS, and GPU-FAST-PRCLUS.
+# GPU-FAST-PROCLUS
+This repository contains the implementation of PROCLUS, FAST-PROCLUS, FAST*-PROCLUS, GPU-PROCLUS, GPU-FAST-PROCLUS, and GPU-FAST*-PROCLUS.
 
 ## Requirements
 The implementation has only been tested on a workstation with Ubuntu 20.4 LTS and Windows 10, both with CUDA 10.1. Therefore, the implementation might not run on MAC.
