@@ -13,7 +13,7 @@ X = load_iris()[:, :4]
 
 
 n = 10_000  # X.shape[0]  # 100_000
-d = 15  # X.shape[1]
+d = 10  # X.shape[1]
 cl = 10
 std = 5
 dims_pr_cl = 5
@@ -30,6 +30,8 @@ rounds = 5
 print("before generation")
 X = load_synt_gauss(n=n, d=d, cl=cl, re=0, cl_d=dims_pr_cl, std=std)
 print("after generation")
+
+np.savetxt("X10_000.csv", X, delimiter=",")
 
 torch.cuda.synchronize()
 

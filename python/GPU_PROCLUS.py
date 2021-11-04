@@ -118,7 +118,7 @@ def load_skyserver_10x10():
 
 t0 = time.time()
 print("Compiling our c++/cuda code, this usually takes 1-2 min. ")
-impl = load(name="GPU_PROCLUS13",
+impl = load(name="GPU_PROCLUS16",
             sources=[
                 "src/map/GPU_PROCLUS_map.cpp",
                 "src/algorithms/PROCLUS.cpp",
