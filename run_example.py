@@ -15,7 +15,7 @@ def run(method, X):
     min_deviation = 0.7
     termination_rounds = 5
 
-    rounds = 20
+    rounds = 3
 
     total = 0.
     for _ in range(rounds):
@@ -30,7 +30,7 @@ def run(method, X):
 
 def runs(method):
     r = [run(method, load_data()) for load_data in
-         (load_glass, load_vowel, load_pendigits, load_skyserver_1x1, load_skyserver_5x5, load_skyserver_10x10)]
+         (load_glass, load_vowel, load_pendigits, load_skyserver_1x1)]
     print(r)
     return r
 
@@ -50,7 +50,7 @@ termination_rounds = 5
 # do one run just to get the GPU started and get more correct measurements
 GPU_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds)
 
-labels = ["glass", "vowel", "pendigits", "sky 1x1", "sky 5x5", "sky 10x10"]
+labels = ["glass", "vowel", "pendigits", "sky 1x1"]
 ra = np.arange(len(labels))
 fig, ax = plt.subplots(figsize=(8, 5))
 width = 1. / 7.
@@ -71,20 +71,8 @@ rects5 = ax.bar(ra + 3 * width / 2, GPU_FAST_star_PROCLUS_times, width=width, la
 GPU_FAST_PROCLUS_times = runs(GPU_FAST_PROCLUS)
 rects6 = ax.bar(ra + 5 * width / 2, GPU_FAST_PROCLUS_times, width=width, label="GPU-FAST-PROCLUS")
 
-
 ax.set_xticks(ra)
 ax.set_xticklabels(labels)
-
-
-def autolabel(rects):
-    """Attach a text label above each bar in *rects*, displaying its height."""
-    for rect in rects:
-        height = round(rect.get_height(), 3)
-        ax.annotate('{}'.format(height),
-                    xy=(rect.get_x() + rect.get_width() / 2, rect.get_height()),
-                    xytext=(0, 1),
-                    textcoords="offset points",
-                    ha='center', va='bottom')
 
 plt.ylabel('time in seconds')
 
@@ -92,5 +80,5 @@ ax.legend()
 plt.rc('font', size=11)
 plt.yscale("log")
 fig.tight_layout()
-plt.savefig("plots/real.pdf")
+plt.savefig("plots/example.png")
 plt.show()

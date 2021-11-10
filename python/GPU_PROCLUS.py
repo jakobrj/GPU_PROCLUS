@@ -127,7 +127,7 @@ def load_skyserver_10x10():
 
 t0 = time.time()
 print("Compiling our c++/cuda code, this usually takes 1-2 min. ")
-impl = load(name="GPU_PROCLUS13",
+impl = load(name="GPU_PROCLUS16",
             sources=[
                 "src/map/GPU_PROCLUS_map.cpp",
                 "src/algorithms/PROCLUS.cpp",
@@ -144,15 +144,15 @@ def PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=False):
     return impl.PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug)
 
 
-def PROCLUS_KEEP(X, k, l, a, b, min_deviation, termination_rounds, debug=False):
+def FAST_star_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=False):
     return impl.PROCLUS_KEEP(X, k, l, a, b, min_deviation, termination_rounds, debug)
 
 
-def PROCLUS_SAVE(X, k, l, a, b, min_deviation, termination_rounds, debug=False):
+def FAST_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=False):
     return impl.PROCLUS_SAVE(X, k, l, a, b, min_deviation, termination_rounds, debug)
 
 
-def PROCLUS_PARAM(X, ks, ls, a, b, min_deviation, termination_rounds, debug=False):
+def FAST_PROCLUS_multi(X, ks, ls, a, b, min_deviation, termination_rounds, debug=False):
     return impl.PROCLUS_PARAM(X, ks, ls, a, b, min_deviation, termination_rounds, debug)
 
 
@@ -160,21 +160,19 @@ def GPU_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=False):
     return impl.GPU_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug)
 
 
-def GPU_PROCLUS_KEEP(X, k, l, a, b, min_deviation, termination_rounds, debug=False):
+def GPU_FAST_star_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=False):
     return impl.GPU_PROCLUS_KEEP(X, k, l, a, b, min_deviation, termination_rounds, debug)
 
 
-def GPU_PROCLUS_SAVE(X, k, l, a, b, min_deviation, termination_rounds, debug=False):
+def GPU_FAST_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=False):
     return impl.GPU_PROCLUS_SAVE(X, k, l, a, b, min_deviation, termination_rounds, debug)
 
 
-def GPU_PROCLUS_PARAM(X, ks, ls, a, b, min_deviation, termination_rounds):
+def GPU_FAST_PROCLUS_multi(X, ks, ls, a, b, min_deviation, termination_rounds):
     return impl.GPU_PROCLUS_PARAM(X, ks, ls, a, b, min_deviation, termination_rounds)
 
-
-def GPU_PROCLUS_PARAM_2(X, ks, ls, a, b, min_deviation, termination_rounds):
+def GPU_FAST_PROCLUS_multi_2(X, ks, ls, a, b, min_deviation, termination_rounds):
     return impl.GPU_PROCLUS_PARAM_2(X, ks, ls, a, b, min_deviation, termination_rounds)
 
-
-def GPU_PROCLUS_PARAM_3(X, ks, ls, a, b, min_deviation, termination_rounds):
+def GPU_FAST_PROCLUS_multi_3(X, ks, ls, a, b, min_deviation, termination_rounds):
     return impl.GPU_PROCLUS_PARAM_3(X, ks, ls, a, b, min_deviation, termination_rounds)
