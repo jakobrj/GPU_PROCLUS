@@ -59,7 +59,7 @@ if experiment == "GPU_S":
     rs = GPU_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=True)
 
 if experiment == "GPU_KEEP":
-    rs = GPU_PROCLUS_KEEP(X, k, l, a, b, min_deviation, termination_rounds)
+    rs = GPU_FAST_star_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds)
     gpu_avg_time = 0
     for _ in range(rounds):
         print("GPU_KEEP", _)
@@ -68,16 +68,16 @@ if experiment == "GPU_KEEP":
             for l_i in ls:
                 print("k:", k_i, "l", l_i)
                 t0 = time.time()
-                rs = GPU_PROCLUS_KEEP(X, k_i, l_i, a, b, min_deviation, termination_rounds)
+                rs = GPU_FAST_star_PROCLUS(X, k_i, l_i, a, b, min_deviation, termination_rounds)
                 gpu_avg_time += time.time() - t0
     gpu_avg_time /= rounds
     print("avg time: %.4fs" % gpu_avg_time)
 
 if experiment == "GPU_KEEP_S":
-    rs = GPU_PROCLUS_KEEP(X, k, l, a, b, min_deviation, termination_rounds, debug=True)
+    rs = GPU_FAST_star_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=True)
 
 if experiment == "GPU_SAVE":
-    rs = GPU_PROCLUS_SAVE(X, k, l, a, b, min_deviation, termination_rounds)
+    rs = GPU_FAST_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds)
     gpu_avg_time = 0
     for _ in range(rounds):
         print("GPU_SAVE", _)
@@ -86,13 +86,13 @@ if experiment == "GPU_SAVE":
             for l_i in ls:
                 print("k:", k_i, "l", l_i)
                 t0 = time.time()
-                rs = GPU_PROCLUS_SAVE(X, k_i, l_i, a, b, min_deviation, termination_rounds)
+                rs = GPU_FAST_PROCLUS(X, k_i, l_i, a, b, min_deviation, termination_rounds)
                 gpu_avg_time += time.time() - t0
     gpu_avg_time /= rounds
     print("avg time: %.4fs" % gpu_avg_time)
 
 if experiment == "GPU_SAVE_S":
-    rs = GPU_PROCLUS_SAVE(X, k, l, a, b, min_deviation, termination_rounds, debug=True)
+    rs = GPU_FAST_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=True)
 
 if experiment == "CPU":
     gpu_avg_time = 0
@@ -112,10 +112,10 @@ if experiment == "CPU_S":
     rs = PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=True)
 
 if experiment == "CPU_KEEP_S":
-    rs = PROCLUS_KEEP(X, k, l, a, b, min_deviation, termination_rounds, debug=True)
+    rs = FAST_star_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=True)
 
 if experiment == "CPU_SAVE_S":
-    rs = PROCLUS_SAVE(X, k, l, a, b, min_deviation, termination_rounds, debug=True)
+    rs = FAST_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=True)
 
 if experiment == "CPU_PARAM":
     gpu_avg_time = 0
@@ -123,13 +123,13 @@ if experiment == "CPU_PARAM":
         print("CPU_PARAM", _)
         # X = load_synt_gauss(n=n, d=d, cl=cl, std=std, re=round, cl_d=dims_pr_cl)
         t0 = time.time()
-        rs = PROCLUS_PARAM(X, ks, ls, a, b, min_deviation, termination_rounds, debug=False)
+        rs = FAST_PROCLUS_multi(X, ks, ls, a, b, min_deviation, termination_rounds, debug=False)
         gpu_avg_time += time.time() - t0
     gpu_avg_time /= rounds
     print("avg time: %.4fs" % gpu_avg_time)
 
 if experiment == "CPU_PARAM_S":
-    rs = PROCLUS_PARAM(X, ks, ls, a, b, min_deviation, termination_rounds, debug=True)
+    rs = FAST_PROCLUS_multi(X, ks, ls, a, b, min_deviation, termination_rounds, debug=True)
 
 if experiment == "GPU_PARAM":
     rs = GPU_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds)
@@ -138,7 +138,7 @@ if experiment == "GPU_PARAM":
         print("GPU_PARAM", _)
         X = load_synt_gauss(n=n, d=d, cl=cl, std=std, re=round, cl_d=dims_pr_cl)
         t0 = time.time()
-        rs = GPU_PROCLUS_PARAM(X, ks, ls, a, b, min_deviation, termination_rounds)
+        rs = GPU_FAST_PROCLUS_multi(X, ks, ls, a, b, min_deviation, termination_rounds)
         gpu_avg_time += time.time() - t0
     gpu_avg_time /= rounds
     print("avg time: %.4fs" % gpu_avg_time)
