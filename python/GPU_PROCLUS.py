@@ -95,6 +95,15 @@ def load_skyserver_1x1():
     return normalize(m)
 
 
+def load_skyserver_2x2():
+    m_list = []
+    for r in ["(10_11_10_11)", "(11_12_10_11)", "(10_11_11_12)", "(11_12_11_12)"]:
+        m_list.append(
+            torch.from_numpy(np.loadtxt("data/real/skyserver/result " + r + ".csv", delimiter=',', skiprows=2)).float())
+    m = torch.cat(m_list)
+    return normalize(m)
+
+
 def load_skyserver_5x5():
     m_list = []
     for r in ["(10_15_10_11)", "(10_15_11_12)", "(10_15_12_13)", "(10_15_13_14)", "(10_15_14_15)"]:
@@ -162,8 +171,10 @@ def GPU_PROCLUS_SAVE(X, k, l, a, b, min_deviation, termination_rounds, debug=Fal
 def GPU_PROCLUS_PARAM(X, ks, ls, a, b, min_deviation, termination_rounds):
     return impl.GPU_PROCLUS_PARAM(X, ks, ls, a, b, min_deviation, termination_rounds)
 
+
 def GPU_PROCLUS_PARAM_2(X, ks, ls, a, b, min_deviation, termination_rounds):
     return impl.GPU_PROCLUS_PARAM_2(X, ks, ls, a, b, min_deviation, termination_rounds)
+
 
 def GPU_PROCLUS_PARAM_3(X, ks, ls, a, b, min_deviation, termination_rounds):
     return impl.GPU_PROCLUS_PARAM_3(X, ks, ls, a, b, min_deviation, termination_rounds)
