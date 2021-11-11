@@ -8,6 +8,7 @@
 #include "GPU_PROCLUS.cuh"
 
 #include <cooperative_groups/reduce.h>
+
 namespace cg = cooperative_groups;
 
 #define BLOCK_SIZE 1024
@@ -607,10 +608,11 @@ void gpu_assign_points(int *d_C, int *d_C_sizes,
             d_Ds, d_D_sizes, d_C, d_C_sizes, d_data, d_M_current, n, k, d);
 
 
-
-    /*dim3 block_k_n(k, min(n, remaining));
+/*
+    dim3 block_k_n(k, min(n, remaining));
     gpu_assign_points_kernel_CG << < number_of_blocks, block_k_n, min(n, remaining) * sizeof(float) >> > (
-            d_Ds, d_D_sizes, d_C, d_C_sizes, d_data, d_M_current, n, k, d);*/
+            d_Ds, d_D_sizes, d_C, d_C_sizes, d_data, d_M_current, n, k, d);
+            */
 
 //    gpu_assign_points_kernel<<<number_of_blocks, BLOCK_SIZE>>>(d_Ds, d_D_sizes, d_C, d_C_sizes, d_data, d_M_current, n,
 //                                                               k, d);
@@ -1884,6 +1886,17 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
                  bool debug) {
     cudaDeviceSynchronize();
     gpuErrchk(cudaPeekAtLastError());
+
+    {
+        size_t free_byte;
+        size_t total_byte;
+        cudaMemGetInfo(&free_byte, &total_byte);
+        double free_db = (double) free_byte;
+        double total_db = (double) total_byte;
+        double used_db = total_db - free_db;
+        printf("GPU memory usage: used = %f, free = %f MB, total = %f MB\n",
+               used_db / 1024.0 / 1024.0, free_db / 1024.0 / 1024.0, total_db / 1024.0 / 1024.0);
+    }
 //    cudaProfilerStart();
 
     //getting constants
@@ -1947,6 +1960,16 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
     float *d_X = device_allocate_float(k * d);
     float *d_Z = device_allocate_float(k * d);
     gpuErrchk(cudaPeekAtLastError());
+
+    size_t free_byte;
+    size_t total_byte;
+    cudaMemGetInfo(&free_byte, &total_byte);
+    double free_db = (double) free_byte;
+    double total_db = (double) total_byte;
+    double used_db = total_db - free_db;
+    printf("GPU memory usage: used = %f, free = %f MB, total = %f MB\n",
+           used_db / 1024.0 / 1024.0, free_db / 1024.0 / 1024.0, total_db / 1024.0 / 1024.0);
+
 
     //// Initialization Phase ////
     fill_with_indices(d_S, n);
