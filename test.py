@@ -12,7 +12,7 @@ X = load_iris()[:, :4]
 # X = load_synt(20, 10000, 20, 0)
 
 
-n = 10_000  # X.shape[0]  # 100_000
+n = 4_096_000  # X.shape[0]  # 100_000
 d = 10  # X.shape[1]
 cl = 10
 std = 5
@@ -21,7 +21,7 @@ dims_pr_cl = 5
 k = cl
 l = dims_pr_cl
 a = 100
-b = 50
+b = 10
 min_deviation = 0.7
 termination_rounds = 5
 
@@ -74,7 +74,7 @@ if experiment == "GPU_KEEP":
     print("avg time: %.4fs" % gpu_avg_time)
 
 if experiment == "GPU_KEEP_S":
-    rs = GPU_FAST_star_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=True)
+    rs = GPU_FAST_star_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=False)
 
 if experiment == "GPU_SAVE":
     rs = GPU_FAST_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds)
@@ -92,7 +92,7 @@ if experiment == "GPU_SAVE":
     print("avg time: %.4fs" % gpu_avg_time)
 
 if experiment == "GPU_SAVE_S":
-    rs = GPU_FAST_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=True)
+    rs = GPU_FAST_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=False)
 
 if experiment == "CPU":
     gpu_avg_time = 0

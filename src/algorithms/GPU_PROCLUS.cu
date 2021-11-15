@@ -1360,6 +1360,17 @@ GPU_PROCLUS_KEEP(at::Tensor data, int k, int l, float a, float b, float min_devi
     cudaDeviceSynchronize();
 //    cudaProfilerStart();
 
+    {
+        size_t free_byte;
+        size_t total_byte;
+        cudaMemGetInfo(&free_byte, &total_byte);
+        double free_db = (double) free_byte;
+        double total_db = (double) total_byte;
+        double used_db = total_db - free_db;
+        printf("GPU memory usage: used = %f, free = %f MB, total = %f MB\n",
+               used_db / 1024.0 / 1024.0, free_db / 1024.0 / 1024.0, total_db / 1024.0 / 1024.0);
+    }
+
     //getting constants
     int n = data.size(0);
     int d = data.size(1);
@@ -1413,6 +1424,17 @@ GPU_PROCLUS_KEEP(at::Tensor data, int k, int l, float a, float b, float min_devi
     int *d_termination_criterion = device_allocate_int_zero(1);
     float *d_X = device_allocate_float(k * d);
     float *d_Z = device_allocate_float(k * d);
+
+    {
+        size_t free_byte;
+        size_t total_byte;
+        cudaMemGetInfo(&free_byte, &total_byte);
+        double free_db = (double) free_byte;
+        double total_db = (double) total_byte;
+        double used_db = total_db - free_db;
+        printf("GPU memory usage: used = %f, free = %f MB, total = %f MB\n",
+               used_db / 1024.0 / 1024.0, free_db / 1024.0 / 1024.0, total_db / 1024.0 / 1024.0);
+    }
 
     //// Initialization Phase ////
     fill_with_indices(d_S, n);
@@ -1961,14 +1983,16 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
     float *d_Z = device_allocate_float(k * d);
     gpuErrchk(cudaPeekAtLastError());
 
-    size_t free_byte;
-    size_t total_byte;
-    cudaMemGetInfo(&free_byte, &total_byte);
-    double free_db = (double) free_byte;
-    double total_db = (double) total_byte;
-    double used_db = total_db - free_db;
-    printf("GPU memory usage: used = %f, free = %f MB, total = %f MB\n",
-           used_db / 1024.0 / 1024.0, free_db / 1024.0 / 1024.0, total_db / 1024.0 / 1024.0);
+    {
+        size_t free_byte;
+        size_t total_byte;
+        cudaMemGetInfo(&free_byte, &total_byte);
+        double free_db = (double) free_byte;
+        double total_db = (double) total_byte;
+        double used_db = total_db - free_db;
+        printf("GPU memory usage: used = %f, free = %f MB, total = %f MB\n",
+               used_db / 1024.0 / 1024.0, free_db / 1024.0 / 1024.0, total_db / 1024.0 / 1024.0);
+    }
 
 
     //// Initialization Phase ////
