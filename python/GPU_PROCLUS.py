@@ -135,7 +135,7 @@ impl = load(name="GPU_PROCLUS17",
                 "src/utils/util.cpp",
                 "src/utils/mem_util.cpp",
                 "src/utils/gpu_util.cu"
-            ], extra_cuda_cflags=["-w"], extra_cflags=["-w"], with_cuda=True)
+            ], extra_cuda_cflags=["-w", "--std=c++17"], extra_cflags=["-w", "--std=c++17", "-fopenmp"], with_cuda=True)
 
 print("Finished compilation, took: %.4fs" % (time.time() - t0))
 
@@ -143,17 +143,26 @@ print("Finished compilation, took: %.4fs" % (time.time() - t0))
 def PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=False):
     return impl.PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug)
 
+def PROCLUS_parallel(X, k, l, a, b, min_deviation, termination_rounds, debug=False):
+    return impl.PROCLUS_parallel(X, k, l, a, b, min_deviation, termination_rounds, debug)
 
 def FAST_star_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=False):
     return impl.PROCLUS_KEEP(X, k, l, a, b, min_deviation, termination_rounds, debug)
 
+def FAST_star_PROCLUS_parallel(X, k, l, a, b, min_deviation, termination_rounds, debug=False):
+    return impl.PROCLUS_KEEP_parallel(X, k, l, a, b, min_deviation, termination_rounds, debug)
 
 def FAST_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=False):
     return impl.PROCLUS_SAVE(X, k, l, a, b, min_deviation, termination_rounds, debug)
 
+def FAST_PROCLUS_parallel(X, k, l, a, b, min_deviation, termination_rounds, debug=False):
+    return impl.PROCLUS_SAVE_parallel(X, k, l, a, b, min_deviation, termination_rounds, debug)
 
 def FAST_PROCLUS_multi(X, ks, ls, a, b, min_deviation, termination_rounds, debug=False):
     return impl.PROCLUS_PARAM(X, ks, ls, a, b, min_deviation, termination_rounds, debug)
+
+def FAST_PROCLUS_multi_parallel(X, ks, ls, a, b, min_deviation, termination_rounds, debug=False):
+    return impl.PROCLUS_PARAM_parallel(X, ks, ls, a, b, min_deviation, termination_rounds, debug)
 
 
 def GPU_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=False):

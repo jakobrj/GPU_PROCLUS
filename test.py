@@ -12,7 +12,7 @@ X = load_iris()[:, :4]
 # X = load_synt(20, 10000, 20, 0)
 
 
-n = 4_096_000  # X.shape[0]  # 100_000
+n = 100_000  # X.shape[0]  # 100_000
 d = 10  # X.shape[1]
 cl = 10
 std = 5
@@ -101,15 +101,40 @@ if experiment == "CPU":
         X = load_synt_gauss(n=n, d=d, cl=cl, std=std, re=round, cl_d=dims_pr_cl)
         for k_i in ks:
             for l_i in ls:
-                print("k:", k, "l:", l)
+                print("k:", k_i, "l:", l_i)
                 t0 = time.time()
                 rs = PROCLUS(X, k_i, l_i, a, b, min_deviation, termination_rounds)
                 gpu_avg_time += time.time() - t0
     gpu_avg_time /= rounds
     print("avg time: %.4fs" % gpu_avg_time)
 
+if experiment == "CPU_P":
+    gpu_avg_time = 0
+    for _ in range(rounds):
+        print("CPU_P", _)
+        X = load_synt_gauss(n=n, d=d, cl=cl, std=std, re=round, cl_d=dims_pr_cl)
+        for k_i in ks:
+            for l_i in ls:
+                print("k:", k_i, "l:", l_i)
+                t0 = time.time()
+                rs = PROCLUS_parallel(X, k_i, l_i, a, b, min_deviation, termination_rounds)
+                gpu_avg_time += time.time() - t0
+    gpu_avg_time /= rounds
+    print("avg time: %.4fs" % gpu_avg_time)
+
+if experiment == "CPU_P_S":
+    t0 = time.time()
+    rs = PROCLUS_parallel(X, k, l, a, b, min_deviation, termination_rounds, debug=False)
+    t1 = time.time()
+    t = t1-t0
+    print("time: %.4fs" % t)
+
 if experiment == "CPU_S":
-    rs = PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=True)
+    t0 = time.time()
+    rs = PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=False)
+    t1 = time.time()
+    t = t1-t0
+    print("time: %.4fs" % t)
 
 if experiment == "CPU_KEEP_S":
     rs = FAST_star_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=True)

@@ -1,6 +1,7 @@
 #include <cstdio>
 #include "util.h"
 #include "mem_util.h"
+#include "omp.h"
 
 
 #define DEBUG false
@@ -54,8 +55,23 @@ void compute_l2_norm_to_medoid(float *dist, at::Tensor data, int *S, int m_i, in
         }
         dist[i] = std::sqrt(dist[i]);
     }
+}
 
-//    return dist;
+void compute_l2_norm_to_medoid_parallel(float *dist, at::Tensor data, int *S, int m_i, int n, int d) {
+    float *x_m_i = data[m_i].data_ptr<float>();
+
+#pragma omp parallel for
+    for (int i = 0; i < n; i++) {
+        float *x_S_i = data[S[i]].data_ptr<float>();
+        dist[i] = 0;
+        for (int j = 0; j < d; j++) {
+            float x1 = x_S_i[j];
+            float x2 = x_m_i[j];
+            float sub = x1 - x2;
+            dist[i] += sub * sub;
+        }
+        dist[i] = std::sqrt(dist[i]);
+    }
 }
 
 
@@ -176,6 +192,13 @@ std::pair<int, int> *argmin_2d(float **values, int n, int m) {
 }
 
 void index_wise_minimum(float *values_1, float *values_2, int n) {
+    for (int i = 0; i < n; i++) {
+        values_1[i] = std::min(values_1[i], values_2[i]);
+    }
+}
+
+void index_wise_minimum_parallel(float *values_1, float *values_2, int n) {
+#pragma omp parallel for
     for (int i = 0; i < n; i++) {
         values_1[i] = std::min(values_1[i], values_2[i]);
     }

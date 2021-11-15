@@ -12,9 +12,13 @@
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m
 ) {
 m.def("PROCLUS",    &PROCLUS,    "");
+m.def("PROCLUS_parallel",    &PROCLUS_parallel,    "");
 m.def("PROCLUS_KEEP",    &PROCLUS_KEEP,    "");
+m.def("PROCLUS_KEEP_parallel",    &PROCLUS_KEEP_parallel,    "");
 m.def("PROCLUS_SAVE",    &PROCLUS_SAVE,    "");
+m.def("PROCLUS_SAVE_parallel",    &PROCLUS_SAVE_parallel,    "");
 m.def("PROCLUS_PARAM",    &PROCLUS_PARAM,    "");
+m.def("PROCLUS_PARAM_parallel",    &PROCLUS_PARAM_parallel,    "");
 m.def("GPU_PROCLUS",    &GPU_PROCLUS,    "");
 m.def("GPU_PROCLUS_KEEP",    &GPU_PROCLUS_KEEP,    "");
 m.def("GPU_PROCLUS_SAVE",    &GPU_PROCLUS_SAVE,    "");

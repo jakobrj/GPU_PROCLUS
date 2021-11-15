@@ -25,6 +25,8 @@ float *compute_l1_norm_to_medoid(at::Tensor S, int m_i, bool *D_i, int n, int d)
 
 void compute_l2_norm_to_medoid(float *dist, at::Tensor data, int m_i, int n, int d);
 
+void compute_l2_norm_to_medoid_parallel(float *dist, at::Tensor data, int *S, int m_i, int n, int d);
+
 void compute_l2_norm_to_medoid(float *dist, at::Tensor data, int *S, int m_i, int n, int d);
 
 
@@ -36,6 +38,8 @@ extern int argmin_1d(T *values, int n);
 std::pair<int, int> *argmin_2d(float **values, int n, int m);
 
 void index_wise_minimum(float *values_1, float *values_2, int n);
+
+void index_wise_minimum_parallel(float *values_1, float *values_2, int n);
 
 float mean_1d(float *values, int n);
 
