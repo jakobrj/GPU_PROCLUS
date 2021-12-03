@@ -13,6 +13,9 @@ plt.rcParams.update({'font.serif': "Times New Roman"})
 label_PROCLUS = "PROCLUS"
 label_FAST_star_PROCLUS = "FAST*-PROCLUS"
 label_FAST_PROCLUS = "FAST-PROCLUS"
+label_PROCLUS_parallel = "PROCLUS(multi-core)"
+label_FAST_star_PROCLUS_parallel = "FAST*-PROCLUS(multi-core)"
+label_FAST_PROCLUS_parallel = "FAST-PROCLUS(multi-core)"
 label_GPU_PROCLUS = "GPU-PROCLUS"
 label_GPU_FAST_star_PROCLUS = "GPU-FAST*-PROCLUS"
 label_GPU_FAST_PROCLUS = "GPU-FAST-PROCLUS"
@@ -21,10 +24,19 @@ style_map = {
     label_PROCLUS: {"color": "#A12C23", "marker": "x", "linestyle": "dashed"},
     label_FAST_star_PROCLUS: {"color": "#00554D", "marker": "*", "linestyle": "dashed"},
     label_FAST_PROCLUS: {"color": "#0281BB", "marker": "o", "linestyle": "dashed"},
+    label_PROCLUS_parallel: {"color": "#A12C23", "marker": "x", "linestyle": "dotted"},
+    label_FAST_star_PROCLUS_parallel: {"color": "#00554D", "marker": "*", "linestyle": "dotted"},
+    label_FAST_PROCLUS_parallel: {"color": "#0281BB", "marker": "o", "linestyle": "dotted"},
     label_GPU_PROCLUS: {"color": "#74A23D", "marker": "x", "linestyle": "solid"},
     label_GPU_FAST_star_PROCLUS: {"color": "#8BB3FF", "marker": "*", "linestyle": "solid"},
     label_GPU_FAST_PROCLUS: {"color": "#F19000", "marker": "o", "linestyle": "solid"},
 }
+
+algorithms_1 = [(PROCLUS, label_PROCLUS), (FAST_star_PROCLUS, label_FAST_star_PROCLUS), (FAST_PROCLUS, label_FAST_PROCLUS),
+                (PROCLUS_parallel, label_PROCLUS_parallel), (FAST_star_PROCLUS_parallel, label_FAST_star_PROCLUS_parallel),
+                (FAST_PROCLUS_parallel, label_FAST_PROCLUS_parallel),
+                (GPU_PROCLUS, label_GPU_PROCLUS), (GPU_FAST_star_PROCLUS, label_GPU_FAST_star_PROCLUS),
+                (GPU_FAST_PROCLUS, label_GPU_FAST_PROCLUS)]
 
 
 def get_standard_params():
@@ -365,9 +377,7 @@ def run_experiment(experiment_name, algorithms, iterator, x_label="number of poi
 def run_inc_n():
     experiment_name = "inc_n"
 
-    algorithms = [(PROCLUS, "PROCLUS"), (FAST_star_PROCLUS, "FAST*-PROCLUS"), (FAST_PROCLUS, "FAST-PROCLUS"),
-                  (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                  (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS")]
+    algorithms = algorithms_1
 
     ns = [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000]
 
@@ -384,9 +394,7 @@ def run_inc_n():
 def run_inc_d():
     experiment_name = "inc_d"
 
-    algorithms = [(PROCLUS, "PROCLUS"), (FAST_star_PROCLUS, "FAST*-PROCLUS"), (FAST_PROCLUS, "FAST-PROCLUS"),
-                  (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                  (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS")]
+    algorithms = algorithms_1
 
     ds = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
 
@@ -403,9 +411,7 @@ def run_inc_d():
 def run_inc_k():
     experiment_name = "inc_k"
 
-    algorithms = [(PROCLUS, "PROCLUS"), (FAST_star_PROCLUS, "FAST*-PROCLUS"), (FAST_PROCLUS, "FAST-PROCLUS"),
-                  (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                  (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS")]
+    algorithms = algorithms_1
 
     ks = [5, 10, 15, 20, 25]
 
@@ -418,12 +424,11 @@ def run_inc_k():
 
     run_experiment(experiment_name, algorithms, iterator, x_label="number of clusters", y_label="time in seconds")
 
+
 def run_inc_l():
     experiment_name = "inc_l"
 
-    algorithms = [(PROCLUS, "PROCLUS"), (FAST_star_PROCLUS, "FAST*-PROCLUS"), (FAST_PROCLUS, "FAST-PROCLUS"),
-                  (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                  (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS")]
+    algorithms = algorithms_1
 
     ls = [5, 10, 15]
 
@@ -434,14 +439,14 @@ def run_inc_l():
             avgs.append(run_rounds_time(experiment_name, algo, algo_name, l_=l))
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms, iterator, x_label="average number of dimensions", y_label="time in seconds")
+    run_experiment(experiment_name, algorithms, iterator, x_label="average number of dimensions",
+                   y_label="time in seconds")
+
 
 def run_inc_a():
     experiment_name = "inc_A"
 
-    algorithms = [(PROCLUS, "PROCLUS"), (FAST_star_PROCLUS, "FAST*-PROCLUS"), (FAST_PROCLUS, "FAST-PROCLUS"),
-                  (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                  (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS")]
+    algorithms = algorithms_1
 
     As = [10, 20, 50, 100, 200, 300, 400, 500]
 
@@ -454,12 +459,11 @@ def run_inc_a():
 
     run_experiment(experiment_name, algorithms, iterator, x_label="constant A", y_label="time in seconds")
 
+
 def run_inc_b():
     experiment_name = "inc_B"
 
-    algorithms = [(PROCLUS, "PROCLUS"), (FAST_star_PROCLUS, "FAST*-PROCLUS"), (FAST_PROCLUS, "FAST-PROCLUS"),
-                  (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                  (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS")]
+    algorithms = algorithms_1
 
     Bs = [5, 10, 20, 50, 100]
 
@@ -472,12 +476,11 @@ def run_inc_b():
 
     run_experiment(experiment_name, algorithms, iterator, x_label="constant B", y_label="time in seconds")
 
+
 def run_inc_dev():
     experiment_name = "inc_dev"
 
-    algorithms = [(PROCLUS, "PROCLUS"), (FAST_star_PROCLUS, "FAST*-PROCLUS"), (FAST_PROCLUS, "FAST-PROCLUS"),
-                  (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                  (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS")]
+    algorithms = algorithms_1
 
     devs = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.]
 
@@ -489,6 +492,7 @@ def run_inc_dev():
         return list(reversed(avgs))
 
     run_experiment(experiment_name, algorithms, iterator, x_label="$min_{deviation}$", y_label="time in seconds")
+
 
 def run_inc_cl():
     experiment_name = "inc_cl"
@@ -506,14 +510,14 @@ def run_inc_cl():
             avgs.append(run_rounds_time(experiment_name, algo, algo_name, cl_=cl))
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms, iterator, x_label="number of actual clusters", y_label="time in seconds")
+    run_experiment(experiment_name, algorithms, iterator, x_label="number of actual clusters",
+                   y_label="time in seconds")
+
 
 def run_inc_std():
     experiment_name = "inc_std"
 
-    algorithms = [(PROCLUS, "PROCLUS"), (FAST_star_PROCLUS, "FAST*-PROCLUS"), (FAST_PROCLUS, "FAST-PROCLUS"),
-                  (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                  (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS")]
+    algorithms = algorithms_1
 
     stds = [5, 10, 15, 20, 25]
 
