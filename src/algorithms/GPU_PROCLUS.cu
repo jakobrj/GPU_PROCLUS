@@ -23,6 +23,13 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
     }
 }
 
+int get_current_memory_usage() {
+    size_t free_byte;
+    size_t total_byte;
+    cudaMemGetInfo(&free_byte, &total_byte);
+    return total_byte - free_byte;
+}
+
 __device__ __forceinline__
 
 float atomicMin(float *addr, float value) {
@@ -110,21 +117,17 @@ void gpu_greedy_kernel_dist_min_max(float *d_max_value, float *d_data, int *M, i
         atomicMax(&d_max_value[0], max_value);//then find global
 }
 
-int *gpu_greedy(float *d_data, int *d_S, int Bk, int Ak, int d, int n) {
+int *gpu_greedy(float *d_data, int *d_S,
+                int *d_M, float *d_dist, int *d_prev, float *d_max_value,
+                int Bk, int Ak, int d, int n) {
 
-    //allocate result
-    int *d_M;
-    cudaMalloc(&d_M, Bk * sizeof(int));
 
-    //allocate tmp
-    float *d_dist;
-    cudaMalloc(&d_dist, Ak * sizeof(float));
-    int *d_prev;
-    cudaMalloc(&d_prev, sizeof(int));
-    cudaMemset(d_prev, 0, sizeof(int));
-    float *d_max_value;
-    cudaMalloc(&d_max_value, sizeof(float));
-    cudaMemset(d_max_value, 0, sizeof(float));
+    //cudaMalloc(&d_M, Bk * sizeof(int));
+    //cudaMalloc(&d_dist, Ak * sizeof(float));
+    //cudaMalloc(&d_prev, sizeof(int));
+    //cudaMemset(d_prev, 0, sizeof(int));
+    //cudaMalloc(&d_max_value, sizeof(float));
+    //cudaMemset(d_max_value, 0, sizeof(float));
 
 //    int rnd_start = std::rand() % Ak;
     int rnd_start = Ak / 2;
@@ -145,12 +148,6 @@ int *gpu_greedy(float *d_data, int *d_S, int Bk, int Ak, int d, int n) {
         gpu_greedy_kernel_dist_min_max << < grid, BLOCK_SIZE_SMALL >> >
         (d_max_value, d_data, d_M, d_S, d_dist, Ak, d, i);
     }
-
-
-    //free tmp
-    cudaFree(d_dist);
-    cudaFree(d_prev);
-    cudaFree(d_max_value);
 
     return d_M;
 }
@@ -893,11 +890,12 @@ void fill_with_indices(int *d_S, int n) {
     fill_with_indices_kernel << < number_of_blocks, min(n, BLOCK_SIZE) >> > (d_S, n);
 }
 
-std::vector <at::Tensor>
+std::pair<std::vector<at::Tensor>, int>
 GPU_PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation, int termination_rounds, bool debug) {
     cudaDeviceSynchronize();
 //    cudaProfilerStart();
 
+    int total_alloc = get_current_memory_usage();
 
     //getting constants
     int n = data.size(0);
@@ -949,6 +947,18 @@ GPU_PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation
     float *d_X = device_allocate_float(k * d);
     float *d_Z = device_allocate_float(k * d);
 
+
+    //allocate result
+    int *d_M = device_allocate_int(Bk);
+
+    //allocate tmp
+    float *d_dist = device_allocate_float(Ak);
+    int *d_prev = device_allocate_int_zero(1);
+    float *d_max_value = device_allocate_float_zero(1);
+
+
+    total_alloc = get_current_memory_usage() - total_alloc;
+
     //// Initialization Phase ////
     fill_with_indices(d_S, n);
 
@@ -963,7 +973,13 @@ GPU_PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation
         print_array_gpu(d_S, Ak);
     }
 
-    int *d_M = gpu_greedy(d_data, d_S, Bk, Ak, d, n);
+    gpu_greedy(d_data, d_S,
+               d_M, d_dist, d_prev, d_max_value,
+               Bk, Ak, d, n);
+    //free tmp
+    cudaFree(d_dist);
+    cudaFree(d_prev);
+    cudaFree(d_max_value);
 
     if (debug) {
         printf("d_M:\n");
@@ -1138,7 +1154,7 @@ GPU_PROCLUS(at::Tensor data, int k, int l, float a, float b, float min_deviation
 
     cudaDeviceSynchronize();
 
-    return r;
+    return make_pair(r,total_alloc);
 }
 
 __global__
@@ -1354,22 +1370,14 @@ void gpu_replace_medoids_kernel_keep_reset(int *d_L_sizes, float *d_delta_old, f
     d_H[i * d + j] = 0.;
 }
 
-std::vector <at::Tensor>
+std::pair<std::vector<at::Tensor>, int>
 GPU_PROCLUS_KEEP(at::Tensor data, int k, int l, float a, float b, float min_deviation, int termination_rounds,
                  bool debug) {
     cudaDeviceSynchronize();
 //    cudaProfilerStart();
 
-    {
-        size_t free_byte;
-        size_t total_byte;
-        cudaMemGetInfo(&free_byte, &total_byte);
-        double free_db = (double) free_byte;
-        double total_db = (double) total_byte;
-        double used_db = total_db - free_db;
-        printf("GPU memory usage: used = %f, free = %f MB, total = %f MB\n",
-               used_db / 1024.0 / 1024.0, free_db / 1024.0 / 1024.0, total_db / 1024.0 / 1024.0);
-    }
+
+    int total_alloc = get_current_memory_usage();
 
     //getting constants
     int n = data.size(0);
@@ -1425,16 +1433,17 @@ GPU_PROCLUS_KEEP(at::Tensor data, int k, int l, float a, float b, float min_devi
     float *d_X = device_allocate_float(k * d);
     float *d_Z = device_allocate_float(k * d);
 
-    {
-        size_t free_byte;
-        size_t total_byte;
-        cudaMemGetInfo(&free_byte, &total_byte);
-        double free_db = (double) free_byte;
-        double total_db = (double) total_byte;
-        double used_db = total_db - free_db;
-        printf("GPU memory usage: used = %f, free = %f MB, total = %f MB\n",
-               used_db / 1024.0 / 1024.0, free_db / 1024.0 / 1024.0, total_db / 1024.0 / 1024.0);
-    }
+
+    //allocate result
+    int *d_M = device_allocate_int(Bk);
+
+    //allocate tmp
+    float *d_dist = device_allocate_float(Ak);
+    int *d_prev = device_allocate_int_zero(1);
+    float *d_max_value = device_allocate_float_zero(1);
+
+
+    total_alloc = get_current_memory_usage() - total_alloc;
 
     //// Initialization Phase ////
     fill_with_indices(d_S, n);
@@ -1444,7 +1453,13 @@ GPU_PROCLUS_KEEP(at::Tensor data, int k, int l, float a, float b, float min_devi
         gpu_random_sample_locked(d_S, Ak, n, d_state, d_lock);
     }
 
-    int *d_M = gpu_greedy(d_data, d_S, Bk, Ak, d, n);
+    gpu_greedy(d_data, d_S,
+               d_M, d_dist, d_prev, d_max_value,
+               Bk, Ak, d, n);
+    //free tmp
+    cudaFree(d_dist);
+    cudaFree(d_prev);
+    cudaFree(d_max_value);
 
     //// Iterative Phase ///
     fill_with_indices(d_M_random, Bk);
@@ -1621,7 +1636,7 @@ GPU_PROCLUS_KEEP(at::Tensor data, int k, int l, float a, float b, float min_devi
     gpuErrchk(cudaPeekAtLastError());
 //    cudaProfilerStop();
 
-    return r;
+    return make_pair(r, total_alloc);
 }
 
 
@@ -1903,23 +1918,13 @@ gpu_replace_medoids_kernel_pre(int *d_M_idx, int *d_M_idx_best, int *d_M_current
     }
 }
 
-std::vector <at::Tensor>
+std::pair<std::vector<at::Tensor>, int>
 GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_deviation, int termination_rounds,
                  bool debug) {
     cudaDeviceSynchronize();
     gpuErrchk(cudaPeekAtLastError());
 
-    {
-        size_t free_byte;
-        size_t total_byte;
-        cudaMemGetInfo(&free_byte, &total_byte);
-        double free_db = (double) free_byte;
-        double total_db = (double) total_byte;
-        double used_db = total_db - free_db;
-        printf("GPU memory usage: used = %f, free = %f MB, total = %f MB\n",
-               used_db / 1024.0 / 1024.0, free_db / 1024.0 / 1024.0, total_db / 1024.0 / 1024.0);
-    }
-//    cudaProfilerStart();
+    int total_alloc = get_current_memory_usage();
 
     //getting constants
     int n = data.size(0);
@@ -1935,6 +1940,7 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
     //initializing random generator for cuda
     curandState *d_state;
     cudaMalloc(&d_state, BLOCK_SIZE * sizeof(curandState));
+    add_total_allocation_count(BLOCK_SIZE * sizeof(curandState));
     init_seed << < 1, BLOCK_SIZE >> > (d_state, 42);
     gpuErrchk(cudaPeekAtLastError());
 
@@ -1981,19 +1987,19 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
     int *d_termination_criterion = device_allocate_int_zero(1);
     float *d_X = device_allocate_float(k * d);
     float *d_Z = device_allocate_float(k * d);
+
+
+    //allocate result
+    int *d_M = device_allocate_int(Bk);
+
+    //allocate tmp
+    float *d_dist = device_allocate_float(Ak);
+    int *d_prev = device_allocate_int_zero(1);
+    float *d_max_value = device_allocate_float_zero(1);
+
     gpuErrchk(cudaPeekAtLastError());
 
-    {
-        size_t free_byte;
-        size_t total_byte;
-        cudaMemGetInfo(&free_byte, &total_byte);
-        double free_db = (double) free_byte;
-        double total_db = (double) total_byte;
-        double used_db = total_db - free_db;
-        printf("GPU memory usage: used = %f, free = %f MB, total = %f MB\n",
-               used_db / 1024.0 / 1024.0, free_db / 1024.0 / 1024.0, total_db / 1024.0 / 1024.0);
-    }
-
+    total_alloc = get_current_memory_usage() - total_alloc;
 
     //// Initialization Phase ////
     fill_with_indices(d_S, n);
@@ -2005,8 +2011,15 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
         gpu_random_sample_locked(d_S, Ak, n, d_state, d_lock);
     }
 
-    int *d_M = gpu_greedy(d_data, d_S, Bk, Ak, d, n);
+    gpu_greedy(d_data, d_S,
+               d_M, d_dist, d_prev, d_max_value,
+               Bk, Ak, d, n);
     gpuErrchk(cudaPeekAtLastError());
+
+    //free tmp
+    cudaFree(d_dist);
+    cudaFree(d_prev);
+    cudaFree(d_max_value);
 
     //// Iterative Phase ///
     fill_with_indices(d_M_random, Bk);
@@ -2189,15 +2202,17 @@ GPU_PROCLUS_SAVE(at::Tensor data, int k, int l, float a, float b, float min_devi
     gpuErrchk(cudaPeekAtLastError());
 //    cudaProfilerStop();
 
-    return r;
+    return make_pair(r, total_alloc);
 }
 
 
-std::vector <std::vector<at::Tensor>>
+std::pair<std::vector <std::vector<at::Tensor>>, int>
 GPU_PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a, float b, float min_deviation,
                   int termination_rounds) {
     cudaDeviceSynchronize();
 //    cudaProfilerStart();
+
+    int total_alloc = get_current_memory_usage();
 
     //getting constants
     int k_max = ks[0];
@@ -2249,11 +2264,27 @@ GPU_PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, flo
     float *d_X = device_allocate_float(k_max * d);
     float *d_Z = device_allocate_float(k_max * d);
 
+    //allocate result
+    int *d_M = device_allocate_int(Bk);
+
+    //allocate tmp
+    float *d_dist = device_allocate_float(Ak);
+    int *d_prev = device_allocate_int_zero(1);
+    float *d_max_value = device_allocate_float_zero(1);
+
+    total_alloc = get_current_memory_usage() - total_alloc;
+
     //// Initialization Phase ////
     fill_with_indices(d_S, n);
     gpu_random_sample_locked(d_S, Ak, n, d_state, d_lock);
 
-    int *d_M = gpu_greedy(d_data, d_S, Bk, Ak, d, n);
+    gpu_greedy(d_data, d_S,
+               d_M, d_dist, d_prev, d_max_value,
+               Bk, Ak, d, n);
+    //free tmp
+    cudaFree(d_dist);
+    cudaFree(d_prev);
+    cudaFree(d_max_value);
 
     //// Iterative Phase ///
     fill_with_indices(d_M_random, Bk);
@@ -2416,15 +2447,18 @@ GPU_PROCLUS_PARAM(at::Tensor data, std::vector<int> ks, std::vector<int> ls, flo
     gpuErrchk(cudaPeekAtLastError());
 //    cudaProfilerStop();
 
-    return R;
+    return make_pair(R, total_alloc);
 }
 
 
-std::vector <std::vector<at::Tensor>>
+std::pair<std::vector <std::vector<at::Tensor>>, int>
 GPU_PROCLUS_PARAM_2(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a, float b, float min_deviation,
                     int termination_rounds) {
     cudaDeviceSynchronize();
 //    cudaProfilerStart();
+
+
+    int total_alloc = get_current_memory_usage();
 
     //getting constants
     int k_max = ks[0];
@@ -2476,11 +2510,29 @@ GPU_PROCLUS_PARAM_2(at::Tensor data, std::vector<int> ks, std::vector<int> ls, f
     float *d_X = device_allocate_float(k_max * d);
     float *d_Z = device_allocate_float(k_max * d);
 
+
+    //allocate result
+    int *d_M = device_allocate_int(Bk);
+
+    //allocate tmp
+    float *d_dist = device_allocate_float(Ak);
+    int *d_prev = device_allocate_int_zero(1);
+    float *d_max_value = device_allocate_float_zero(1);
+
+
+    total_alloc = get_current_memory_usage();
+
     //// Initialization Phase ////
     fill_with_indices(d_S, n);
     gpu_random_sample_locked(d_S, Ak, n, d_state, d_lock);
 
-    int *d_M = gpu_greedy(d_data, d_S, Bk, Ak, d, n);
+    gpu_greedy(d_data, d_S,
+               d_M, d_dist, d_prev, d_max_value,
+               Bk, Ak, d, n);
+    //free tmp
+    cudaFree(d_dist);
+    cudaFree(d_prev);
+    cudaFree(d_max_value);
 
     //// Iterative Phase ///
     int number_of_blocks = Bk / BLOCK_SIZE;
@@ -2642,15 +2694,17 @@ GPU_PROCLUS_PARAM_2(at::Tensor data, std::vector<int> ks, std::vector<int> ls, f
     gpuErrchk(cudaPeekAtLastError());
 //    cudaProfilerStop();
 
-    return R;
+    return make_pair(R, total_alloc);
 }
 
 
-std::vector <std::vector<at::Tensor>>
+std::pair<std::vector <std::vector<at::Tensor>>, int>
 GPU_PROCLUS_PARAM_3(at::Tensor data, std::vector<int> ks, std::vector<int> ls, float a, float b, float min_deviation,
                     int termination_rounds) {
     cudaDeviceSynchronize();
 //    cudaProfilerStart();
+
+    int total_alloc = get_current_memory_usage() ;
 
     //getting constants
     int k_max = ks[0];
@@ -2703,6 +2757,17 @@ GPU_PROCLUS_PARAM_3(at::Tensor data, std::vector<int> ks, std::vector<int> ls, f
     float *d_Z = device_allocate_float(k_max * d);
 
 
+    //allocate result
+    int *d_M = device_allocate_int(Bk);
+
+    //allocate tmp
+    float *d_dist = device_allocate_float(Ak);
+    int *d_prev = device_allocate_int_zero(1);
+    float *d_max_value = device_allocate_float_zero(1);
+
+
+    total_alloc = get_current_memory_usage() - total_alloc;
+
     std::vector <std::vector<at::Tensor>> R;
 
     for (int k_idx = 0; k_idx < ks.size(); k_idx++) {
@@ -2716,7 +2781,10 @@ GPU_PROCLUS_PARAM_3(at::Tensor data, std::vector<int> ks, std::vector<int> ls, f
             fill_with_indices(d_S, n);
             gpu_random_sample_locked(d_S, Ak, n, d_state, d_lock);
 
-            int *d_M = gpu_greedy(d_data, d_S, Bk, Ak, d, n);
+
+            gpu_greedy(d_data, d_S,
+                       d_M, d_dist, d_prev, d_max_value,
+                       Bk, Ak, d, n);
 
             //// Iterative Phase ///
             fill_with_indices(d_M_random, Bk);
@@ -2825,6 +2893,11 @@ GPU_PROCLUS_PARAM_3(at::Tensor data, std::vector<int> ks, std::vector<int> ls, f
         }
     }
 
+    //free tmp
+    cudaFree(d_dist);
+    cudaFree(d_prev);
+    cudaFree(d_max_value);
+
     // free all
     cudaFree(d_bad);
     cudaFree(d_C);
@@ -2864,5 +2937,5 @@ GPU_PROCLUS_PARAM_3(at::Tensor data, std::vector<int> ks, std::vector<int> ls, f
     gpuErrchk(cudaPeekAtLastError());
 //    cudaProfilerStop();
 
-    return R;
+    return make_pair(R, total_alloc);
 }

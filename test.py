@@ -93,6 +93,10 @@ if experiment == "GPU_SAVE":
 
 if experiment == "GPU_SAVE_S":
     rs = GPU_FAST_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=False)
+    print(rs[1])
+    rs = GPU_FAST_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds, debug=False)
+    print(rs[1])
+
 
 if experiment == "CPU":
     gpu_avg_time = 0

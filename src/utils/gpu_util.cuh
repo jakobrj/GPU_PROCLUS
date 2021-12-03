@@ -72,4 +72,10 @@ float *device_allocate_float_zero(int n);
 
 bool *device_allocate_bool_zero(int n);
 
+int get_total_allocation_count();
+
+void add_total_allocation_count(int n);
+
+void reset_total_allocation_count();
+
 #endif //PROCLUS_GPU_GPU_UTIL_H

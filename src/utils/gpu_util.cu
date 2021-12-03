@@ -213,27 +213,8 @@ void gpu_not_random_sample_locked(int *d_in, int k, int n, int *d_state, int *d_
     gpu_not_random_sample_kernel_locked << < 1, 1 >> > (d_in, k, n, d_state, d_lock);
 }
 
-//float *copy_to_flatten_device(float **h_mem, int height, int width) {
-//    float *d_mem;
-//    cudaMalloc(&d_mem, height * width * sizeof(float));
-//    for (int row = 0; row < height; row++) {
-//        cudaMemcpy(&d_mem[row * width], h_mem[row], sizeof(float) * width, cudaMemcpyHostToDevice);
-//    }
-//    return d_mem;
-//}
-
 float *copy_to_flatten_device(at::Tensor h_mem, int height, int width) {
-    float *d_mem;
-    cudaMalloc(&d_mem, height * width * sizeof(float));
-//    cudaMalloc(&d_mem, height * width * sizeof(float));
-//    float *tmp = new float[height * width];
-//    for (int row = 0; row < height; row++) {
-//        float *h_mem_row = h_mem[row].data_ptr<float>();
-////        cudaMemcpy(&d_mem[row * width], h_mem_row, sizeof(float) * width, cudaMemcpyHostToDevice);
-//        for (int col = 0; col < width; col++) {
-//            tmp[row * width + col] = h_mem_row[col];
-//        }
-//    }
+    float *d_mem = device_allocate_float(height * width);
     cudaMemcpy(d_mem, h_mem.data<float>(), height * width * sizeof(float), cudaMemcpyHostToDevice);
     return d_mem;
 }
@@ -550,27 +531,34 @@ void inclusive_scan(int *source, int *result, int n) {
     }
 }
 
+
+int total_allocation = 0;
+
 int *device_allocate_int(int n) {
     int *tmp;
     cudaMalloc(&tmp, n * sizeof(int));
+    total_allocation += n * sizeof(int);
     return tmp;
 }
 
 float *device_allocate_float(int n) {
     float *tmp;
     cudaMalloc(&tmp, n * sizeof(float));
+    total_allocation += n * sizeof(float);
     return tmp;
 }
 
 bool *device_allocate_bool(int n) {
     bool *tmp;
     cudaMalloc(&tmp, n * sizeof(bool));
+    total_allocation += n * sizeof(bool);
     return tmp;
 }
 
 int *device_allocate_int_zero(int n) {
     int *tmp;
     cudaMalloc(&tmp, n * sizeof(int));
+    total_allocation += n * sizeof(int);
     cudaMemset(tmp, 0, n * sizeof(int));
     return tmp;
 }
@@ -578,6 +566,7 @@ int *device_allocate_int_zero(int n) {
 float *device_allocate_float_zero(int n) {
     float *tmp;
     cudaMalloc(&tmp, n * sizeof(float));
+    total_allocation += n * sizeof(float);
     cudaMemset(tmp, 0, n * sizeof(float));
     return tmp;
 }
@@ -585,6 +574,19 @@ float *device_allocate_float_zero(int n) {
 bool *device_allocate_bool_zero(int n) {
     bool *tmp;
     cudaMalloc(&tmp, n * sizeof(bool));
+    total_allocation += n * sizeof(bool);
     cudaMemset(tmp, 0, n * sizeof(bool));
     return tmp;
+}
+
+int get_total_allocation_count() {
+    return total_allocation;
+}
+
+void add_total_allocation_count(int n) {
+    total_allocation += n;
+}
+
+void reset_total_allocation_count() {
+    total_allocation = 0;
 }
