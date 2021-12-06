@@ -7,9 +7,6 @@
 #include "../utils/cuda_util.cuh"
 #include "GPU_PROCLUS.cuh"
 
-#include <cooperative_groups/reduce.h>
-
-namespace cg = cooperative_groups;
 
 #define BLOCK_SIZE 1024
 #define BLOCK_SIZE_SMALL 128
@@ -532,6 +529,7 @@ gpu_assign_points_kernel(int *__restrict__ d_Ds, int *__restrict__ d_D_sizes,
     }
 }
 
+/*
 __global__
 void
 gpu_assign_points_kernel_CG(int *__restrict__ d_Ds, int *__restrict__ d_D_sizes,
@@ -579,6 +577,7 @@ gpu_assign_points_kernel_CG(int *__restrict__ d_Ds, int *__restrict__ d_D_sizes,
         }
     }
 }
+*/
 
 void gpu_assign_points(int *d_C, int *d_C_sizes,
                        bool *d_D, int *d_Ds, int *d_D_sizes,
