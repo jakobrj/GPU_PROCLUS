@@ -13,30 +13,64 @@ plt.rcParams.update({'font.serif': "Times New Roman"})
 label_PROCLUS = "PROCLUS"
 label_FAST_star_PROCLUS = "FAST*-PROCLUS"
 label_FAST_PROCLUS = "FAST-PROCLUS"
+label_FAST_PROCLUS_multi = "FAST-PROCLUS(multi-param)"
 label_PROCLUS_parallel = "PROCLUS(multi-core)"
 label_FAST_star_PROCLUS_parallel = "FAST*-PROCLUS(multi-core)"
 label_FAST_PROCLUS_parallel = "FAST-PROCLUS(multi-core)"
+label_FAST_PROCLUS_multi_parallel = "FAST-PROCLUS(multi-param,multi-core)"
 label_GPU_PROCLUS = "GPU-PROCLUS"
 label_GPU_FAST_star_PROCLUS = "GPU-FAST*-PROCLUS"
 label_GPU_FAST_PROCLUS = "GPU-FAST-PROCLUS"
+label_GPU_FAST_PROCLUS_multi1 = "GPU-FAST-PROCLUS(multi-param1)"
+label_GPU_FAST_PROCLUS_multi2 = "GPU-FAST-PROCLUS(multi-param2)"
+label_GPU_FAST_PROCLUS_multi3 = "GPU-FAST-PROCLUS(multi-param3)"
 
 style_map = {
     label_PROCLUS: {"color": "#A12C23", "marker": "x", "linestyle": "dashed"},
     label_FAST_star_PROCLUS: {"color": "#00554D", "marker": "*", "linestyle": "dashed"},
-    label_FAST_PROCLUS: {"color": "#0281BB", "marker": "o", "linestyle": "dashed"},
+    label_FAST_PROCLUS: {"color": "#0281BB", "marker": "1", "linestyle": "dashed"},
+    label_FAST_PROCLUS_multi: {"color": "#0281BB", "marker": "2", "linestyle": "dashed"},
     label_PROCLUS_parallel: {"color": "#A12C23", "marker": "x", "linestyle": "dotted"},
     label_FAST_star_PROCLUS_parallel: {"color": "#00554D", "marker": "*", "linestyle": "dotted"},
-    label_FAST_PROCLUS_parallel: {"color": "#0281BB", "marker": "o", "linestyle": "dotted"},
+    label_FAST_PROCLUS_parallel: {"color": "#0281BB", "marker": "1", "linestyle": "dotted"},
+    label_FAST_PROCLUS_multi_parallel: {"color": "#0281BB", "marker": "2", "linestyle": "dotted"},
     label_GPU_PROCLUS: {"color": "#74A23D", "marker": "x", "linestyle": "solid"},
     label_GPU_FAST_star_PROCLUS: {"color": "#8BB3FF", "marker": "*", "linestyle": "solid"},
-    label_GPU_FAST_PROCLUS: {"color": "#F19000", "marker": "o", "linestyle": "solid"},
+    label_GPU_FAST_PROCLUS: {"color": "#F19000", "marker": "1", "linestyle": "solid"},
+    label_GPU_FAST_PROCLUS_multi1: {"color": "#F19000", "marker": "2", "linestyle": "solid"},
+    label_GPU_FAST_PROCLUS_multi2: {"color": "#F19000", "marker": "3", "linestyle": "solid"},
+    label_GPU_FAST_PROCLUS_multi3: {"color": "#F19000", "marker": "4", "linestyle": "solid"},
 }
 
-algorithms_1 = [(PROCLUS, label_PROCLUS), (FAST_star_PROCLUS, label_FAST_star_PROCLUS), (FAST_PROCLUS, label_FAST_PROCLUS),
-                (PROCLUS_parallel, label_PROCLUS_parallel), (FAST_star_PROCLUS_parallel, label_FAST_star_PROCLUS_parallel),
+algorithms_1 = [(PROCLUS, label_PROCLUS), (FAST_star_PROCLUS, label_FAST_star_PROCLUS),
+                (FAST_PROCLUS, label_FAST_PROCLUS),
+                (PROCLUS_parallel, label_PROCLUS_parallel),
+                (FAST_star_PROCLUS_parallel, label_FAST_star_PROCLUS_parallel),
                 (FAST_PROCLUS_parallel, label_FAST_PROCLUS_parallel),
                 (GPU_PROCLUS, label_GPU_PROCLUS), (GPU_FAST_star_PROCLUS, label_GPU_FAST_star_PROCLUS),
                 (GPU_FAST_PROCLUS, label_GPU_FAST_PROCLUS)]
+
+algorithms_2 = [(PROCLUS, label_PROCLUS), (FAST_star_PROCLUS, label_FAST_star_PROCLUS),
+                (FAST_PROCLUS, label_FAST_PROCLUS), (FAST_PROCLUS_multi, label_FAST_PROCLUS_multi),
+                (PROCLUS_parallel, label_PROCLUS_parallel),
+                (FAST_star_PROCLUS_parallel, label_FAST_star_PROCLUS_parallel),
+                (FAST_PROCLUS_parallel, label_FAST_PROCLUS_parallel),
+                (FAST_PROCLUS_multi_parallel, label_FAST_PROCLUS_multi_parallel),
+                (GPU_PROCLUS, label_GPU_PROCLUS), (GPU_FAST_star_PROCLUS, label_GPU_FAST_star_PROCLUS),
+                (GPU_FAST_PROCLUS, label_GPU_FAST_PROCLUS), (GPU_FAST_PROCLUS_multi, label_GPU_FAST_PROCLUS_multi1),
+                (GPU_FAST_PROCLUS_multi_2, label_GPU_FAST_PROCLUS_multi2),
+                (GPU_FAST_PROCLUS_multi_3, label_GPU_FAST_PROCLUS_multi3)]
+
+algorithms_3 = [(PROCLUS, label_PROCLUS), (FAST_star_PROCLUS, label_FAST_star_PROCLUS),
+                (FAST_PROCLUS, label_FAST_PROCLUS), (FAST_PROCLUS_multi, label_FAST_PROCLUS_multi),
+                (PROCLUS_parallel, label_PROCLUS_parallel),
+                (FAST_star_PROCLUS_parallel, label_FAST_star_PROCLUS_parallel),
+                (FAST_PROCLUS_parallel, label_FAST_PROCLUS_parallel),
+                (FAST_PROCLUS_multi_parallel, label_FAST_PROCLUS_multi_parallel),
+                (GPU_PROCLUS, label_GPU_PROCLUS), (GPU_FAST_star_PROCLUS, label_GPU_FAST_star_PROCLUS),
+                (GPU_FAST_PROCLUS, label_GPU_FAST_PROCLUS), (GPU_FAST_PROCLUS_multi, label_GPU_FAST_PROCLUS_multi1),
+                (GPU_FAST_PROCLUS_multi_2, label_GPU_FAST_PROCLUS_multi2),
+                (GPU_FAST_PROCLUS_multi_3, label_GPU_FAST_PROCLUS_multi3)]
 
 
 def get_standard_params():
@@ -150,7 +184,7 @@ def run_param(algorithm, experiment, method, n, d, k, l, a, b, min_deviation, te
 
         GPU_PROCLUS(X_, 1, 1, 5, 4, min_deviation, termination_rounds)
         t0 = time.time()
-        if method == "GPU-FAST-PROCLUS" or method == "GPU-FAST-PROCLUS_2" or method == "GPU-FAST-PROCLUS_3" or method == "FAST-PROCLUS":
+        if method == label_GPU_FAST_PROCLUS_multi1 or method == label_GPU_FAST_PROCLUS_multi2 or method == label_GPU_FAST_PROCLUS_multi3 or method == label_FAST_PROCLUS_multi:
             _ = algorithm(X, [k + 1, k, k - 1], [l + 1, l, l - 1], a, b, min_deviation, termination_rounds)
         else:
             for k_i in [k + 1, k, k - 1]:
@@ -275,45 +309,8 @@ def plot_speedup_legend(to_plt, xs, x_label, experiment, y_max=None):
     plt.clf()
 
 
-def run_rounds_time(experiment_name, algo, algo_name, n_=None, d_=None, k_=None, l_=None, a_=None, b_=None,
-                    min_deviation_=None, termination_rounds_=None, cl_=None, std_=None, dims_pr_cl_=None):
-    n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-
-    if n_ is not None:
-        n = n_
-    if d_ is not None:
-        d = d_
-    if k_ is not None:
-        k = k_
-    if l_ is not None:
-        l = l_
-    if a_ is not None:
-        a = a_
-    if b_ is not None:
-        b = b_
-    if min_deviation_ is not None:
-        min_deviation = min_deviation_
-    if termination_rounds_ is not None:
-        termination_rounds = termination_rounds_
-    if cl_ is not None:
-        cl = cl_
-    if std_ is not None:
-        std = std_
-    if dims_pr_cl_ is not None:
-        dims_pr_cl = dims_pr_cl_
-
-    avg_running_time = 0.
-    for round in range(rounds):
-        print("round:", round)
-        running_time = run(algo, experiment_name, algo_name, n, d, k, l, a, b, min_deviation,
-                           termination_rounds, cl, std, dims_pr_cl, round)
-        avg_running_time += running_time
-
-    return avg_running_time / rounds
-
-
-def run_rounds_space(experiment_name, algo, algo_name, n_=None, d_=None, k_=None, l_=None, a_=None, b_=None,
-                     min_deviation_=None, termination_rounds_=None, cl_=None, std_=None, dims_pr_cl_=None):
+def run_rounds(experiment_name, algo, algo_name, f_run, n_=None, d_=None, k_=None, l_=None, a_=None, b_=None,
+               min_deviation_=None, termination_rounds_=None, cl_=None, std_=None, dims_pr_cl_=None):
     n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
 
     if n_ is not None:
@@ -342,9 +339,8 @@ def run_rounds_space(experiment_name, algo, algo_name, n_=None, d_=None, k_=None
     avg = 0.
     for round in range(rounds):
         print("round:", round)
-        space = run_space(algo, experiment_name, algo_name, n, d, k, l, a, b, min_deviation,
-                          termination_rounds, cl, std, dims_pr_cl, round)
-        avg += space
+        avg += f_run(algo, experiment_name, algo_name, n, d, k, l, a, b, min_deviation,
+                     termination_rounds, cl, std, dims_pr_cl, round)
 
     return avg / rounds
 
@@ -385,7 +381,40 @@ def run_inc_n():
         avgs = []
         for n in reversed(ns):
             print("n:", n)
-            avgs.append(run_rounds_time(experiment_name, algo, algo_name, n_=n))
+            avgs.append(run_rounds(experiment_name, algo, algo_name, run, n_=n))
+        return list(reversed(avgs))
+
+    run_experiment(experiment_name, algorithms, iterator, x_label="number of points", y_label="time in seconds")
+
+
+def run_inc_n_param():
+    experiment_name = "inc_n_param"
+
+    algorithms = algorithms_2
+
+    ns = [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000]
+
+    def iterator(experiment_name, algo, algo_name):
+        avgs = []
+        for n in reversed(ns):
+            print("n:", n)
+            avgs.append(run_rounds(experiment_name, algo, algo_name, run_param, n_=n))
+        return list(reversed(avgs))
+
+    run_experiment(experiment_name, algorithms, iterator, x_label="number of points", y_label="time in seconds")
+
+def run_inc_n_param_large():
+    experiment_name = "inc_n_param_large"
+
+    algorithms = algorithms_3
+
+    ns = [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000, 2048000, 4096000, 8192000]
+
+    def iterator(experiment_name, algo, algo_name):
+        avgs = []
+        for n in reversed(ns):
+            print("n:", n)
+            avgs.append(run_rounds(experiment_name, algo, algo_name, run_param, n_=n))
         return list(reversed(avgs))
 
     run_experiment(experiment_name, algorithms, iterator, x_label="number of points", y_label="time in seconds")
@@ -402,7 +431,40 @@ def run_inc_d():
         avgs = []
         for d in reversed(ds):
             print("d:", d)
-            avgs.append(run_rounds_time(experiment_name, algo, algo_name, d_=d))
+            avgs.append(run_rounds(experiment_name, algo, algo_name, run, d_=d))
+        return list(reversed(avgs))
+
+    run_experiment(experiment_name, algorithms, iterator, x_label="number of dimensions", y_label="time in seconds")
+
+
+def run_inc_d_param():
+    experiment_name = "inc_d_param"
+
+    algorithms = algorithms_2
+
+    ds = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+
+    def iterator(experiment_name, algo, algo_name):
+        avgs = []
+        for d in reversed(ds):
+            print("d:", d)
+            avgs.append(run_rounds(experiment_name, algo, algo_name, run_param, d_=d))
+        return list(reversed(avgs))
+
+    run_experiment(experiment_name, algorithms, iterator, x_label="number of dimensions", y_label="time in seconds")
+
+def run_inc_d_param_large():
+    experiment_name = "inc_d_param_large"
+
+    algorithms = algorithms_3
+
+    ds = [10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100]
+
+    def iterator(experiment_name, algo, algo_name):
+        avgs = []
+        for d in reversed(ds):
+            print("d:", d)
+            avgs.append(run_rounds(experiment_name, algo, algo_name, run_param, d_=d))
         return list(reversed(avgs))
 
     run_experiment(experiment_name, algorithms, iterator, x_label="number of dimensions", y_label="time in seconds")
@@ -419,7 +481,7 @@ def run_inc_k():
         avgs = []
         for k in reversed(ks):
             print("k:", k)
-            avgs.append(run_rounds_time(experiment_name, algo, algo_name, k_=k))
+            avgs.append(run_rounds(experiment_name, algo, algo_name, run, k_=k))
         return list(reversed(avgs))
 
     run_experiment(experiment_name, algorithms, iterator, x_label="number of clusters", y_label="time in seconds")
@@ -436,7 +498,7 @@ def run_inc_l():
         avgs = []
         for l in reversed(ls):
             print("l:", l)
-            avgs.append(run_rounds_time(experiment_name, algo, algo_name, l_=l))
+            avgs.append(run_rounds(experiment_name, algo, algo_name, run, l_=l))
         return list(reversed(avgs))
 
     run_experiment(experiment_name, algorithms, iterator, x_label="average number of dimensions",
@@ -454,7 +516,7 @@ def run_inc_a():
         avgs = []
         for A in reversed(As):
             print("A:", A)
-            avgs.append(run_rounds_time(experiment_name, algo, algo_name, a_=A))
+            avgs.append(run_rounds(experiment_name, algo, algo_name, run, a_=A))
         return list(reversed(avgs))
 
     run_experiment(experiment_name, algorithms, iterator, x_label="constant A", y_label="time in seconds")
@@ -471,7 +533,7 @@ def run_inc_b():
         avgs = []
         for B in reversed(Bs):
             print("B:", B)
-            avgs.append(run_rounds_time(experiment_name, algo, algo_name, b_=B))
+            avgs.append(run_rounds(experiment_name, algo, algo_name, run, b_=B))
         return list(reversed(avgs))
 
     run_experiment(experiment_name, algorithms, iterator, x_label="constant B", y_label="time in seconds")
@@ -488,7 +550,7 @@ def run_inc_dev():
         avgs = []
         for dev in reversed(devs):
             print("min_deviation:", dev)
-            avgs.append(run_rounds_time(experiment_name, algo, algo_name, min_deviation_=dev))
+            avgs.append(run_rounds(experiment_name, algo, algo_name, run, min_deviation_=dev))
         return list(reversed(avgs))
 
     run_experiment(experiment_name, algorithms, iterator, x_label="$min_{deviation}$", y_label="time in seconds")
@@ -507,7 +569,7 @@ def run_inc_cl():
         avgs = []
         for cl in reversed(cls):
             print("cl:", cl)
-            avgs.append(run_rounds_time(experiment_name, algo, algo_name, cl_=cl))
+            avgs.append(run_rounds(experiment_name, algo, algo_name, run, cl_=cl))
         return list(reversed(avgs))
 
     run_experiment(experiment_name, algorithms, iterator, x_label="number of actual clusters",
@@ -525,7 +587,7 @@ def run_inc_std():
         avgs = []
         for std in reversed(stds):
             print("std:", std)
-            avgs.append(run_rounds_time(experiment_name, algo, algo_name, std_=std))
+            avgs.append(run_rounds(experiment_name, algo, algo_name, run, std_=std))
         return list(reversed(avgs))
 
     run_experiment(experiment_name, algorithms, iterator, x_label="standard deviation", y_label="time in seconds")
@@ -543,7 +605,7 @@ def run_space_n():
         avgs = []
         for n in reversed(ns):
             print("n:", n)
-            avgs.append(run_rounds_space(experiment_name, algo, algo_name, n_=n))
+            avgs.append(run_rounds(experiment_name, algo, algo_name, run_space, n_=n))
         return list(reversed(avgs))
 
     run_experiment(experiment_name, algorithms, iterator, x_label="number of points", y_label="memory in MB",
@@ -1089,6 +1151,8 @@ if experiment == "all":
     run_inc_cl()
     run_inc_std()
     run_space_n()
+    run_inc_n_param()
+    run_inc_d_param()
 elif experiment == "inc_n":
     run_inc_n()
 elif experiment == "inc_d":

@@ -1741,7 +1741,7 @@ void gpu_compute_L_save(int *d_L, int *d_L_sizes_change, int *d_L_sizes, int *d_
                         float *d_data,
                         int n, int d, int k) {
     int number_of_blocks = n / BLOCK_SIZE_SMALL;
-    if (n % BLOCK_SIZE) number_of_blocks++;
+    if (n % BLOCK_SIZE_SMALL) number_of_blocks++;
     dim3 grid_k_n(k, number_of_blocks);
     gpu_compute_L_kernel_sum_dist_SAVE << < grid_k_n, min(n, BLOCK_SIZE_SMALL), d * sizeof(float) >> > (d_M_idx, d_M,
             d_data,

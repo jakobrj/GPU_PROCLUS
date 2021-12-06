@@ -30,7 +30,7 @@ def run(method, X):
 
 def runs(method):
     r = [run(method, load_data()) for load_data in
-         (load_glass, load_vowel, load_pendigits, load_skyserver_1x1, load_skyserver_5x5, load_skyserver_10x10)]
+         (load_glass, load_vowel, load_pendigits, load_skyserver_1x1, load_skyserver_2x2, load_skyserver_5x5)]
     print(r)
     return r
 
@@ -50,7 +50,7 @@ termination_rounds = 5
 # do one run just to get the GPU started and get more correct measurements
 GPU_PROCLUS(X, k, l, a, b, min_deviation, termination_rounds)
 
-labels = ["glass", "vowel", "pendigits", "sky 1x1", "sky 5x5", "sky 10x10"]
+labels = ["glass", "vowel", "pendigits", "sky 1x1", "sky 2x2", "sky 5x5"]
 ra = np.arange(len(labels))
 fig, ax = plt.subplots(figsize=(8, 5))
 width = 1. / 7.
@@ -74,7 +74,6 @@ rects6 = ax.bar(ra + 5 * width / 2, GPU_FAST_PROCLUS_times, width=width, label="
 
 ax.set_xticks(ra)
 ax.set_xticklabels(labels)
-
 
 def autolabel(rects):
     """Attach a text label above each bar in *rects*, displaying its height."""
