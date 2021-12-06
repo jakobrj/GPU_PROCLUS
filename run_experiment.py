@@ -61,16 +61,16 @@ algorithms_2 = [(PROCLUS, label_PROCLUS), (FAST_star_PROCLUS, label_FAST_star_PR
                 (GPU_FAST_PROCLUS_multi_2, label_GPU_FAST_PROCLUS_multi2),
                 (GPU_FAST_PROCLUS_multi_3, label_GPU_FAST_PROCLUS_multi3)]
 
-algorithms_3 = [(PROCLUS, label_PROCLUS), (FAST_star_PROCLUS, label_FAST_star_PROCLUS),
+algorithms_3 = [(GPU_PROCLUS, label_GPU_PROCLUS), (GPU_FAST_star_PROCLUS, label_GPU_FAST_star_PROCLUS),
+                (GPU_FAST_PROCLUS, label_GPU_FAST_PROCLUS), (GPU_FAST_PROCLUS_multi, label_GPU_FAST_PROCLUS_multi1),
+                (GPU_FAST_PROCLUS_multi_2, label_GPU_FAST_PROCLUS_multi2),
+                (GPU_FAST_PROCLUS_multi_3, label_GPU_FAST_PROCLUS_multi3),
+                (PROCLUS, label_PROCLUS), (FAST_star_PROCLUS, label_FAST_star_PROCLUS),
                 (FAST_PROCLUS, label_FAST_PROCLUS), (FAST_PROCLUS_multi, label_FAST_PROCLUS_multi),
                 (PROCLUS_parallel, label_PROCLUS_parallel),
                 (FAST_star_PROCLUS_parallel, label_FAST_star_PROCLUS_parallel),
                 (FAST_PROCLUS_parallel, label_FAST_PROCLUS_parallel),
-                (FAST_PROCLUS_multi_parallel, label_FAST_PROCLUS_multi_parallel),
-                (GPU_PROCLUS, label_GPU_PROCLUS), (GPU_FAST_star_PROCLUS, label_GPU_FAST_star_PROCLUS),
-                (GPU_FAST_PROCLUS, label_GPU_FAST_PROCLUS), (GPU_FAST_PROCLUS_multi, label_GPU_FAST_PROCLUS_multi1),
-                (GPU_FAST_PROCLUS_multi_2, label_GPU_FAST_PROCLUS_multi2),
-                (GPU_FAST_PROCLUS_multi_3, label_GPU_FAST_PROCLUS_multi3)]
+                (FAST_PROCLUS_multi_parallel, label_FAST_PROCLUS_multi_parallel)]
 
 
 def get_standard_params():
