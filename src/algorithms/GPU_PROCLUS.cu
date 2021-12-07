@@ -2890,12 +2890,14 @@ gpuErrchk(cudaPeekAtLastError());
                                 d_M_best,
                                 d_data,
                                 n, d, k, l);
+gpuErrchk(cudaPeekAtLastError());
 
             gpu_assign_points(d_C_best, d_C_sizes_best,
                               d_D, d_Ds, d_D_sizes,
                               d_M_best,
                               d_data,
                               n, d, k);
+gpuErrchk(cudaPeekAtLastError());
 
             remove_outliers(d_C_result, d_C_best, d_C_sizes_best,
                             d_D,
@@ -2903,6 +2905,7 @@ gpuErrchk(cudaPeekAtLastError());
                             d_M_best,
                             d_data,
                             n, d, k);
+gpuErrchk(cudaPeekAtLastError());
 
             // building result
             std::vector <at::Tensor> r;
@@ -2910,20 +2913,23 @@ gpuErrchk(cudaPeekAtLastError());
             torch::Tensor M_Tensor = torch::zeros({k}, torch::kInt32);
             torch::Tensor D_Tensor = torch::zeros({k, d}, torch::kBool);
             torch::Tensor C_Tensor = torch::zeros({n}, torch::kInt32);
+gpuErrchk(cudaPeekAtLastError());
 
             cudaMemcpy(M_Tensor.data_ptr<int>(), d_M_best, k * sizeof(int), cudaMemcpyDeviceToHost);
             cudaMemcpy(D_Tensor.data_ptr<bool>(), d_D, k * d * sizeof(bool), cudaMemcpyDeviceToHost);
             cudaMemcpy(C_Tensor.data_ptr<int>(), d_C_result, n * sizeof(int), cudaMemcpyDeviceToHost);
+gpuErrchk(cudaPeekAtLastError());
 
             r.push_back(M_Tensor);
             r.push_back(D_Tensor);
             r.push_back(C_Tensor);
 
             R.push_back(r);
-            cudaFree(d_M);
+gpuErrchk(cudaPeekAtLastError());
         }
     }
 
+cudaFree(d_M);
     //free tmp
     cudaFree(d_dist);
     cudaFree(d_prev);
