@@ -589,6 +589,7 @@ void gpu_assign_points(int *d_C, int *d_C_sizes,
     int number_of_blocks = n / remaining;
     if (n % remaining) number_of_blocks++;
     dim3 block_n_k(min(n, remaining), k);
+    gpuErrchk(cudaPeekAtLastError());
 
 //    int number_of_blocks = n / BLOCK_SIZE;
 //    if (n % BLOCK_SIZE) number_of_blocks++;
@@ -596,12 +597,15 @@ void gpu_assign_points(int *d_C, int *d_C_sizes,
     cudaMemset(d_C_sizes, 0, k * sizeof(float));
     cudaMemset(d_Ds, 0, k * d * sizeof(int));
     cudaMemset(d_D_sizes, 0, k * sizeof(int));
+    gpuErrchk(cudaPeekAtLastError());
 
     gpu_restructure_D << < k, d >> > (d_Ds, d_D_sizes, d_D, d, k);
+    gpuErrchk(cudaPeekAtLastError());
 
 
     gpu_assign_points_kernel << < number_of_blocks, block_n_k, min(n, remaining) * sizeof(float) >> > (
             d_Ds, d_D_sizes, d_C, d_C_sizes, d_data, d_M_current, n, k, d);
+    gpuErrchk(cudaPeekAtLastError());
 
 
 /*
