@@ -1746,24 +1746,31 @@ void gpu_compute_L_save(int *d_L, int *d_L_sizes_change, int *d_L_sizes, int *d_
     int number_of_blocks = n / BLOCK_SIZE_SMALL;
     if (n % BLOCK_SIZE_SMALL) number_of_blocks++;
     dim3 grid_k_n(k, number_of_blocks);
+    gpuErrchk(cudaPeekAtLastError());
     gpu_compute_L_kernel_sum_dist_SAVE << < grid_k_n, min(n, BLOCK_SIZE_SMALL), d * sizeof(float) >> > (d_M_idx, d_M,
             d_data,
             d_dist_n_Bk,
             d_dist_n_Bk_set,
             k, d, n);
+    gpuErrchk(cudaPeekAtLastError());
 
     gpu_compute_L_kernel_sqrt_dist_pre_mark << < 1, k >> > (d_M_idx, d_dist_n_Bk, d_dist_n_Bk_set, k, n);
+    gpuErrchk(cudaPeekAtLastError());
 
     //compute delta
     gpu_compute_L_kernel_compute_delta_pre << < 1, k >> > (d_M_idx, d_M, d_delta, d_dist_n_Bk, k, n);
+    gpuErrchk(cudaPeekAtLastError());
 
     //compute L
     cudaMemset(d_L_sizes_change, 0, k * sizeof(int));
+    gpuErrchk(cudaPeekAtLastError());
     gpu_compute_L_kernel_compute_L_pre << < k, min(n, BLOCK_SIZE) >> > (d_lambda, d_M_idx, d_L, d_L_sizes,
             d_L_sizes_change,
             d_dist_n_Bk, d_delta, d_delta_old, k, n);
+    gpuErrchk(cudaPeekAtLastError());
 
     gpu_compute_L_kernel_set_old_delta_pre << < 1, k >> > (d_M_idx, d_delta_old, d_delta, k);
+    gpuErrchk(cudaPeekAtLastError());
 }
 
 
