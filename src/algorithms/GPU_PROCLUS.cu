@@ -2774,6 +2774,7 @@ GPU_PROCLUS_PARAM_3(at::Tensor data, std::vector<int> ks, std::vector<int> ls, f
     int *d_termination_criterion = device_allocate_int_zero(1);
     float *d_X = device_allocate_float(k_max * d);
     float *d_Z = device_allocate_float(k_max * d);
+gpuErrchk(cudaPeekAtLastError());
 
 
     //allocate result
@@ -2783,6 +2784,7 @@ GPU_PROCLUS_PARAM_3(at::Tensor data, std::vector<int> ks, std::vector<int> ls, f
     float *d_dist = device_allocate_float(Ak);
     int *d_prev = device_allocate_int_zero(1);
     float *d_max_value = device_allocate_float_zero(1);
+gpuErrchk(cudaPeekAtLastError());
 
 
     total_alloc = get_current_memory_usage() - total_alloc;
@@ -2804,6 +2806,7 @@ GPU_PROCLUS_PARAM_3(at::Tensor data, std::vector<int> ks, std::vector<int> ls, f
             gpu_greedy(d_data, d_S,
                        d_M, d_dist, d_prev, d_max_value,
                        Bk, Ak, d, n);
+gpuErrchk(cudaPeekAtLastError());
 
             //// Iterative Phase ///
             fill_with_indices(d_M_random, Bk);
@@ -2820,7 +2823,9 @@ GPU_PROCLUS_PARAM_3(at::Tensor data, std::vector<int> ks, std::vector<int> ls, f
             set(d_cost_best, 0, 1000000.);
             cudaMemset(d_termination_criterion, 0, sizeof(float));
 
+gpuErrchk(cudaPeekAtLastError());
             while (termination_criterion < termination_rounds) {
+gpuErrchk(cudaPeekAtLastError());
 
                 //// compute L ////
                 gpu_compute_L_save(d_L, d_L_sizes_change, d_L_sizes, d_lambda,
@@ -2859,18 +2864,22 @@ GPU_PROCLUS_PARAM_3(at::Tensor data, std::vector<int> ks, std::vector<int> ls, f
                                      d_C, d_C_sizes, d_C_best, d_C_sizes_best,
                                      d_bad,
                                      min_deviation, n, k);
+gpuErrchk(cudaPeekAtLastError());
 
                 if (termination_criterion >= termination_rounds) {
                     //only read from device version of termination_criterion as few times as possible
                     cudaMemcpy(&termination_criterion, d_termination_criterion, sizeof(int), cudaMemcpyDeviceToHost);
+gpuErrchk(cudaPeekAtLastError());
                 }
 
                 //replace bad medoids
                 gpu_random_sample_locked(d_M_random, k, Bk, d_state, d_lock);
                 gpu_replace_medoids_kernel_pre << < 1, 1 >> > (d_M_idx, d_M_idx_best, d_M_current, d_M_random, d_M, Bk,
                         d_M_best, d_bad, k, n);
+gpuErrchk(cudaPeekAtLastError());
 
             }
+gpuErrchk(cudaPeekAtLastError());
 
             //// Refinement Phase ////
             gpu_find_dimensions(d_D, d_Z, d_X,
