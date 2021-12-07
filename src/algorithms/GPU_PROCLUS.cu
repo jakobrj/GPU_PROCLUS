@@ -1823,10 +1823,12 @@ void gpu_find_dimensions_save(bool *d_D, float *d_Z, float *d_X, float *d_H,
                               int *d_M_current, int *d_M_idx,
                               float *d_data,
                               int n, int d, int k, int l) {
+    gpuErrchk(cudaPeekAtLastError());
 
     int number_of_blocks = (k * d) / BLOCK_SIZE;
     if ((k * d) % BLOCK_SIZE) number_of_blocks++;
     set_all << < number_of_blocks, min(k * d, BLOCK_SIZE) >> > (d_X, 0, k * d);
+    gpuErrchk(cudaPeekAtLastError());
 
 
     int remaining_d = BLOCK_SIZE / d;
@@ -1834,24 +1836,31 @@ void gpu_find_dimensions_save(bool *d_D, float *d_Z, float *d_X, float *d_H,
     if ((n / k) % remaining_d) number_of_blocks_X_join_v2++;
     dim3 grid_X_join_v2(k, number_of_blocks_X_join_v2);
     dim3 block_X_join_v2(d, remaining_d);
+    gpuErrchk(cudaPeekAtLastError());
 
 
     gpu_find_dimensions_kernel_SAVE_H << < grid_X_join_v2, block_X_join_v2 >> > (d_X, d_H, d_data, d_L,
             d_L_sizes_change, d_L_sizes, d_lambda,
             d_M_current, d_M_idx,
             k, d, n);
+    gpuErrchk(cudaPeekAtLastError());
 
     gpu_find_dimensions_kernel_SAVE_X << < k, d >> > (d_X, d_H, d_data, d_L,
             d_L_sizes_change, d_L_sizes, d_lambda,
             d_M_current, d_M_idx,
             k, d, n);
+    gpuErrchk(cudaPeekAtLastError());
 
     gpu_find_dimensions_kernel_Z << < k, d >> > (d_Z, d_X, k, d);
+    gpuErrchk(cudaPeekAtLastError());
 
     //compute D
     set_all << < number_of_blocks, min(k * d, BLOCK_SIZE) >> > (d_D, false, k * d);
+    gpuErrchk(cudaPeekAtLastError());
     dim3 block(min(32, k), min(32, d));
     gpu_find_dimensions_kernel_compute_D << < 1, block, 2 * k * sizeof(float) >> > (d_D, d_Z, k, d, l);
+    gpuErrchk(cudaPeekAtLastError());
+
 }
 
 __global__
