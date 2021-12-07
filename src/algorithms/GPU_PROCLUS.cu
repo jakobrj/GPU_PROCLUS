@@ -2790,6 +2790,7 @@ gpuErrchk(cudaPeekAtLastError());
     total_alloc = get_current_memory_usage() - total_alloc;
 
     std::vector <std::vector<at::Tensor>> R;
+gpuErrchk(cudaPeekAtLastError());
 
     for (int k_idx = 0; k_idx < ks.size(); k_idx++) {
         int k = ks[k_idx];
@@ -2800,9 +2801,11 @@ gpuErrchk(cudaPeekAtLastError());
             Bk = b * k;
             //// Initialization Phase ////
             fill_with_indices(d_S, n);
+gpuErrchk(cudaPeekAtLastError());
             gpu_random_sample_locked(d_S, Ak, n, d_state, d_lock);
 
 
+gpuErrchk(cudaPeekAtLastError());
             gpu_greedy(d_data, d_S,
                        d_M, d_dist, d_prev, d_max_value,
                        Bk, Ak, d, n);
