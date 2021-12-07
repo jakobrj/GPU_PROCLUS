@@ -184,7 +184,7 @@ def run_param(algorithm, experiment, method, n, d, k, l, a, b, min_deviation, te
 
         GPU_PROCLUS(X_, 1, 1, 5, 4, min_deviation, termination_rounds)
         t0 = time.time()
-        if method == label_GPU_FAST_PROCLUS_multi1 or method == label_GPU_FAST_PROCLUS_multi2 or method == label_GPU_FAST_PROCLUS_multi3 or method == label_FAST_PROCLUS_multi:
+        if method == label_GPU_FAST_PROCLUS_multi1 or method == label_GPU_FAST_PROCLUS_multi2 or method == label_GPU_FAST_PROCLUS_multi3 or method == label_FAST_PROCLUS_multi or method == label_FAST_PROCLUS_multi_parallel:
             _ = algorithm(X, [k + 1, k, k - 1], [l + 1, l, l - 1], a, b, min_deviation, termination_rounds)
         else:
             for k_i in [k + 1, k, k - 1]:
