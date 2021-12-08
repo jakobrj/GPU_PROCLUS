@@ -598,8 +598,8 @@ def run_inc_std():
 def run_space_n():
     experiment_name = "space_n"
 
-    algorithms = [(GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                  (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS")]
+    algorithms = [(GPU_PROCLUS, label_GPU_PROCLUS), (GPU_FAST_star_PROCLUS, label_GPU_FAST_star_PROCLUS),
+                  (GPU_FAST_PROCLUS, label_GPU_FAST_PROCLUS)]
 
     ns = [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000]
 
