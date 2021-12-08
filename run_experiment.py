@@ -348,10 +348,9 @@ def run_rounds(experiment_name, algo, algo_name, f_run, n_=None, d_=None, k_=Non
     return avg / rounds
 
 
-def run_experiment(experiment_name, algorithms, iterator, x_label="number of points", y_label="time in seconds",
+def run_experiment(experiment_name, algorithms, iterator, xs, x_label="number of points", y_label="time in seconds",
                    y_scale="log", y_max=scale_lim, speedup=True):
     n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    ns = [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000]  # , 2048000, 4096000, 8192000]
 
     print("running experiment:", experiment_name)
 
@@ -366,11 +365,11 @@ def run_experiment(experiment_name, algorithms, iterator, x_label="number of poi
         print(algo_name)
         to_plt.append((algo_name, iterator(experiment_name, algo, algo_name)))
 
-    plot_multi(to_plt, ns, x_label, experiment_name, y_max=y_max, y_label=y_label, y_scale=y_scale)
-    plot_multi_legend(to_plt, ns, x_label, experiment_name, y_max=y_max, y_label=y_label, y_scale=y_scale)
+    plot_multi(to_plt, xs, x_label, experiment_name, y_max=y_max, y_label=y_label, y_scale=y_scale)
+    plot_multi_legend(to_plt, xs, x_label, experiment_name, y_max=y_max, y_label=y_label, y_scale=y_scale)
     if speedup:
-        plot_speedup(to_plt, ns, x_label, experiment_name, y_max=y_max)
-        plot_speedup_legend(to_plt, ns, x_label, experiment_name, y_max=y_max)
+        plot_speedup(to_plt, xs, x_label, experiment_name, y_max=y_max)
+        plot_speedup_legend(to_plt, xs, x_label, experiment_name, y_max=y_max)
 
 
 def run_inc_n():
@@ -387,7 +386,7 @@ def run_inc_n():
             avgs.append(run_rounds(experiment_name, algo, algo_name, run, n_=n))
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms, iterator, x_label="number of points", y_label="time in seconds")
+    run_experiment(experiment_name, algorithms,  iterator, ns, x_label="number of points", y_label="time in seconds")
 
 
 def run_inc_n_param():
@@ -404,7 +403,7 @@ def run_inc_n_param():
             avgs.append(run_rounds(experiment_name, algo, algo_name, run_param, n_=n))
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms, iterator, x_label="number of points", y_label="time in seconds")
+    run_experiment(experiment_name, algorithms, iterator, ns, x_label="number of points", y_label="time in seconds")
 
 def run_inc_n_param_large():
     experiment_name = "inc_n_param_large"
@@ -420,7 +419,7 @@ def run_inc_n_param_large():
             avgs.append(run_rounds(experiment_name, algo, algo_name, run_param, n_=n))
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms, iterator, x_label="number of points", y_label="time in seconds")
+    run_experiment(experiment_name, algorithms, iterator, ns, x_label="number of points", y_label="time in seconds")
 
 
 def run_inc_d():
@@ -437,7 +436,7 @@ def run_inc_d():
             avgs.append(run_rounds(experiment_name, algo, algo_name, run, d_=d))
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms, iterator, x_label="number of dimensions", y_label="time in seconds")
+    run_experiment(experiment_name, algorithms, iterator, ds, x_label="number of dimensions", y_label="time in seconds")
 
 
 def run_inc_d_param():
@@ -454,7 +453,7 @@ def run_inc_d_param():
             avgs.append(run_rounds(experiment_name, algo, algo_name, run_param, d_=d))
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms, iterator, x_label="number of dimensions", y_label="time in seconds")
+    run_experiment(experiment_name, algorithms, iterator, ds, x_label="number of dimensions", y_label="time in seconds")
 
 def run_inc_d_param_large():
     experiment_name = "inc_d_param_large"
@@ -470,7 +469,7 @@ def run_inc_d_param_large():
             avgs.append(run_rounds(experiment_name, algo, algo_name, run_param, d_=d))
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms, iterator, x_label="number of dimensions", y_label="time in seconds")
+    run_experiment(experiment_name, algorithms, iterator, ds, x_label="number of dimensions", y_label="time in seconds")
 
 
 def run_inc_k():
@@ -487,7 +486,7 @@ def run_inc_k():
             avgs.append(run_rounds(experiment_name, algo, algo_name, run, k_=k))
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms, iterator, x_label="number of clusters", y_label="time in seconds")
+    run_experiment(experiment_name, algorithms, iterator,ks, x_label="number of clusters", y_label="time in seconds")
 
 
 def run_inc_l():
@@ -504,7 +503,7 @@ def run_inc_l():
             avgs.append(run_rounds(experiment_name, algo, algo_name, run, l_=l))
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms, iterator, x_label="average number of dimensions",
+    run_experiment(experiment_name, algorithms, iterator, ls, x_label="average number of dimensions",
                    y_label="time in seconds")
 
 
@@ -522,7 +521,7 @@ def run_inc_a():
             avgs.append(run_rounds(experiment_name, algo, algo_name, run, a_=A))
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms, iterator, x_label="constant A", y_label="time in seconds")
+    run_experiment(experiment_name, algorithms, iterator, As, x_label="constant A", y_label="time in seconds")
 
 
 def run_inc_b():
@@ -539,7 +538,7 @@ def run_inc_b():
             avgs.append(run_rounds(experiment_name, algo, algo_name, run, b_=B))
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms, iterator, x_label="constant B", y_label="time in seconds")
+    run_experiment(experiment_name, algorithms, iterator, Bs, x_label="constant B", y_label="time in seconds")
 
 
 def run_inc_dev():
@@ -556,7 +555,7 @@ def run_inc_dev():
             avgs.append(run_rounds(experiment_name, algo, algo_name, run, min_deviation_=dev))
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms, iterator, x_label="$min_{deviation}$", y_label="time in seconds")
+    run_experiment(experiment_name, algorithms, iterator, devs, x_label="$min_{deviation}$", y_label="time in seconds")
 
 
 def run_inc_cl():
@@ -575,7 +574,7 @@ def run_inc_cl():
             avgs.append(run_rounds(experiment_name, algo, algo_name, run, cl_=cl))
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms, iterator, x_label="number of actual clusters",
+    run_experiment(experiment_name, algorithms, iterator, cls, x_label="number of actual clusters",
                    y_label="time in seconds")
 
 
@@ -593,7 +592,7 @@ def run_inc_std():
             avgs.append(run_rounds(experiment_name, algo, algo_name, run, std_=std))
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms, iterator, x_label="standard deviation", y_label="time in seconds")
+    run_experiment(experiment_name, algorithms, iterator, stds, x_label="standard deviation", y_label="time in seconds")
 
 
 def run_space_n():
@@ -611,536 +610,8 @@ def run_space_n():
             avgs.append(run_rounds(experiment_name, algo, algo_name, run_space, n_=n))
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms, iterator, x_label="number of points", y_label="memory in MB",
+    run_experiment(experiment_name, algorithms, iterator, ns, x_label="number of points", y_label="memory in MB",
                    y_scale="linear", y_max=600, speedup=False)
-
-
-def run_diff_n():
-    n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    ns = [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000]  # , 2048000, 4096000, 8192000]
-
-    print("running experiment: inc_n")
-
-    if not os.path.exists('experiments_data/inc_n/'):
-        os.makedirs('experiments_data/inc_n/')
-
-    if not os.path.exists('plots/'):
-        os.makedirs('plots/')
-
-    to_plt = []
-    for algo, algo_name in [(PROCLUS, "PROCLUS"), (FAST_star_PROCLUS, "FAST*-PROCLUS"),
-                            (FAST_PROCLUS, "FAST-PROCLUS"),
-                            (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                            (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS")]:
-        print(algo_name)
-        avg_running_times = []
-        for n in reversed(ns):
-            print("n:", n, "cl:", cl)
-            avg_running_time = 0.
-            for round in range(rounds):
-                print("round:", round)
-                running_time = run(algo, "inc_n", algo_name, n, d, k, l, a, b, min_deviation, termination_rounds, cl,
-                                   std, dims_pr_cl, round)
-                avg_running_time += running_time
-
-            avg_running_time /= rounds
-            avg_running_times.append(avg_running_time)
-        avg_running_times = list(reversed(avg_running_times))
-        to_plt.append((algo_name, avg_running_times))
-
-    plot_multi(to_plt, ns, "number of points", "inc_n", y_max=scale_lim)
-    plot_multi_legend(to_plt, ns, "number of points", "inc_n", y_max=scale_lim)
-    plot_speedup(to_plt, ns, "number of points", "inc_n", y_max=scale_lim)
-    plot_speedup_legend(to_plt, ns, "number of points", "inc_n", y_max=scale_lim)
-
-
-def run_space_n_old():
-    n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    ns = [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000]  # , 2048000, 4096000, 8192000]
-
-    experiment = "space_n"
-
-    print("running experiment:", experiment)
-
-    if not os.path.exists('experiments_data/' + experiment + '/'):
-        os.makedirs('experiments_data/' + experiment + '/')
-
-    if not os.path.exists('plots/'):
-        os.makedirs('plots/')
-
-    to_plt = []
-    for algo, algo_name in [(GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                            (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS")]:
-        print(algo_name)
-        avg_spaces = []
-        for n in reversed(ns):
-            print("n:", n, "cl:", cl)
-            avg_space = 0.
-            for round in range(rounds):
-                print("round:", round)
-                space = run_space(algo, experiment, algo_name, n, d, k, l, a, b, min_deviation, termination_rounds, cl,
-                                  std, dims_pr_cl, round)
-                avg_space += space
-
-            avg_space /= rounds
-            avg_spaces.append(avg_space)
-        avg_spaces = list(reversed(avg_spaces))
-        to_plt.append((algo_name, avg_spaces))
-
-    plot_multi(to_plt, ns, "number of points", experiment, y_max=600, y_label="memory in MB", y_scale="linear")
-    plot_multi_legend(to_plt, ns, "number of points", experiment, y_max=600, y_label="memory in MB", y_scale="linear")
-
-
-def run_diff_d():
-    n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    ds = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
-
-    print("running experiment: inc_d")
-
-    if not os.path.exists('experiments_data/inc_d/'):
-        os.makedirs('experiments_data/inc_d/')
-
-    if not os.path.exists('plots/'):
-        os.makedirs('plots/')
-
-    to_plt = []
-
-    for algo, algo_name in [(PROCLUS, "PROCLUS"), (FAST_star_PROCLUS, "FAST*-PROCLUS"),
-                            (FAST_PROCLUS, "FAST-PROCLUS"),
-                            (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                            (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS")]:
-        print(algo_name)
-        avg_running_times = []
-        for d in ds:
-            print("d:", d)
-            avg_running_time = 0.
-            for round in range(rounds):
-                print("round:", round)
-                running_time = run(algo, "inc_d", algo_name, n, d, k, l, a, b, min_deviation, termination_rounds, cl,
-                                   std, dims_pr_cl, round)
-                avg_running_time += running_time
-
-            avg_running_time /= rounds
-            avg_running_times.append(avg_running_time)
-        to_plt.append((algo_name, avg_running_times))
-
-    plot_multi(to_plt, ds, "number of dimensions", "inc_d", y_max=scale_lim)
-    plot_multi_legend(to_plt, ds, "number of dimensions", "inc_d", y_max=scale_lim)
-    plot_speedup(to_plt, ds, "number of dimensions", "inc_d", y_max=scale_lim)
-    plot_speedup_legend(to_plt, ds, "number of dimensions", "inc_d", y_max=scale_lim)
-
-
-def run_diff_n_param():
-    n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    ns = [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000]  # , 2048000, 4096000, 8192000]
-
-    print("running experiment: inc_n_param")
-
-    if not os.path.exists('experiments_data/inc_n_param/'):
-        os.makedirs('experiments_data/inc_n_param/')
-
-    if not os.path.exists('plots/'):
-        os.makedirs('plots/')
-
-    to_plt = []
-    for algo, algo_name in [(PROCLUS, "PROCLUS"), (FAST_star_PROCLUS, "FAST*-PROCLUS"),
-                            (FAST_PROCLUS, "FAST-PROCLUS"), (FAST_PROCLUS_multi, "FAST-PROCLUS"),
-                            (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                            (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS"), (GPU_FAST_PROCLUS_multi, "GPU-FAST-PROCLUS"),
-                            (GPU_FAST_PROCLUS_multi_2, "GPU-FAST-PROCLUS_2"),
-                            (GPU_FAST_PROCLUS_multi_3, "GPU-FAST-PROCLUS_3")]:
-        print(algo_name)
-        avg_running_times = []
-        for n in reversed(ns):
-            # cl = max(1, n//4000)
-            print("n:", n, "cl:", cl)
-            avg_running_time = 0.
-            for round in range(rounds):
-                print("round:", round)
-                running_time = run_param(algo, "inc_n_param", algo_name, n, d, k, l, a, b, min_deviation,
-                                         termination_rounds, cl, std, dims_pr_cl, round)
-                avg_running_time += running_time
-
-            avg_running_time /= (rounds * 9)
-            avg_running_times.append(avg_running_time)
-        avg_running_times = list(reversed(avg_running_times))
-        to_plt.append((algo_name, avg_running_times))
-
-    plot_multi(to_plt, ns, "number of points", "inc_n_param", y_max=scale_lim)
-    plot_multi_legend(to_plt, ns, "number of points", "inc_n_param", y_max=scale_lim)
-    plot_speedup(to_plt, ns, "number of points", "inc_n_param", y_max=scale_lim)
-    plot_speedup_legend(to_plt, ns, "number of points", "inc_n_param", y_max=scale_lim)
-
-
-def run_diff_d_param():
-    n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    ds = [10, 15, 20, 25, 30, 35, 40, 45, 50]
-
-    print("running experiment: inc_d_param")
-
-    if not os.path.exists('experiments_data/inc_d_param/'):
-        os.makedirs('experiments_data/inc_d_param/')
-
-    if not os.path.exists('plots/'):
-        os.makedirs('plots/')
-
-    to_plt = []
-
-    for algo, algo_name in [(PROCLUS, "PROCLUS"), (FAST_star_PROCLUS, "FAST*-PROCLUS"),
-                            (FAST_PROCLUS, "FAST-PROCLUS"), (FAST_PROCLUS_multi, "FAST-PROCLUS"),
-                            (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                            (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS"), (GPU_FAST_PROCLUS_multi, "GPU-FAST-PROCLUS")]:
-        print(algo_name)
-        avg_running_times = []
-        for d in ds:
-            print("d:", d)
-            avg_running_time = 0.
-            for round in range(rounds):
-                print("round:", round)
-                running_time = run_param(algo, "inc_d_param", algo_name, n, d, k, l, a, b, min_deviation,
-                                         termination_rounds, cl, std, dims_pr_cl, round)
-                avg_running_time += running_time
-
-            avg_running_time /= (rounds * 9)
-            avg_running_times.append(avg_running_time)
-        to_plt.append((algo_name, avg_running_times))
-
-    plot_multi(to_plt, ds, "number of dimensions", "inc_d_param", y_max=scale_lim)
-    plot_multi_legend(to_plt, ds, "number of dimensions", "inc_d_param", y_max=scale_lim)
-    plot_speedup(to_plt, ds, "number of dimensions", "inc_d_param", y_max=scale_lim)
-    plot_speedup_legend(to_plt, ds, "number of dimensions", "inc_d_param", y_max=scale_lim)
-
-
-def run_diff_n_param_large():
-    n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    ns = [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000, 2048000, 4096000, 8192000]
-
-    print("running experiment: inc_n_param_large")
-
-    if not os.path.exists('experiments_data/inc_n_param_large/'):
-        os.makedirs('experiments_data/inc_n_param_large/')
-
-    if not os.path.exists('plots/'):
-        os.makedirs('plots/')
-
-    to_plt = []
-    for algo, algo_name in [(GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                            (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS"), (GPU_FAST_PROCLUS_multi, "GPU-FAST-PROCLUS")]:
-        print(algo_name)
-        avg_running_times = []
-        for n in reversed(ns):
-            print("n:", n, "cl:", cl)
-            avg_running_time = 0.
-            for round in range(rounds):
-                print("round:", round)
-                running_time = run_param(algo, "inc_n_param_large", algo_name, n, d, k, l, a, b, min_deviation,
-                                         termination_rounds, cl, std, dims_pr_cl, round)
-                avg_running_time += running_time
-
-            avg_running_time /= (rounds * 9)
-            avg_running_times.append(avg_running_time)
-        avg_running_times = list(reversed(avg_running_times))
-        to_plt.append((algo_name, avg_running_times))
-
-    plot_multi(to_plt, ns, "number of points", "inc_n_param_large", y_max=scale_lim)
-    plot_multi_legend(to_plt, ns, "number of points", "inc_n_param_large", y_max=scale_lim)
-    # plot_speedup(to_plt, ns, "number of points", "inc_n_param_large", y_max=scale_lim)
-
-
-def run_diff_d_param_large():
-    n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    ds = [10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100]
-
-    print("running experiment: inc_d_param_large")
-
-    if not os.path.exists('experiments_data/inc_d_param_large/'):
-        os.makedirs('experiments_data/inc_d_param_large/')
-
-    if not os.path.exists('plots/'):
-        os.makedirs('plots/')
-
-    to_plt = []
-
-    for algo, algo_name in [(GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                            (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS"), (GPU_FAST_PROCLUS_multi, "GPU-FAST-PROCLUS")]:
-        print(algo_name)
-        avg_running_times = []
-        for d in ds:
-            print("d:", d)
-            avg_running_time = 0.
-            for round in range(rounds):
-                print("round:", round)
-                running_time = run_param(algo, "inc_d_param_large", algo_name, n, d, k, l, a, b, min_deviation,
-                                         termination_rounds, cl, std, dims_pr_cl, round)
-                avg_running_time += running_time
-
-            avg_running_time /= (rounds * 9)
-            avg_running_times.append(avg_running_time)
-        to_plt.append((algo_name, avg_running_times))
-
-    plot_multi(to_plt, ds, "number of dimensions", "inc_d_param_large", y_max=scale_lim)
-    plot_multi_legend(to_plt, ds, "number of dimensions", "inc_d_param_large", y_max=scale_lim)
-    # plot_speedup(to_plt, ds, "number of dimensions", "inc_d_param_large", y_max=scale_lim)
-
-
-def run_diff_k():
-    n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    ks = [5, 10, 15, 20, 25]  # , 25, 30, 35, 40, 45, 50]
-
-    print("running experiment: inc_k")
-
-    if not os.path.exists('experiments_data/inc_k/'):
-        os.makedirs('experiments_data/inc_k/')
-
-    if not os.path.exists('plots/'):
-        os.makedirs('plots/')
-
-    to_plt = []
-
-    for algo, algo_name in [(PROCLUS, "PROCLUS"), (FAST_star_PROCLUS, "FAST*-PROCLUS"),
-                            (FAST_PROCLUS, "FAST-PROCLUS"),
-                            (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                            (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS")]:
-        print(algo_name)
-        avg_running_times = []
-        for k in ks:
-            print("k:", k)
-            avg_running_time = 0.
-            for round in range(rounds):
-                print("round:", round)
-                running_time = run(algo, "inc_k", algo_name, n, d, k, l, a, b, min_deviation, termination_rounds, cl,
-                                   std, dims_pr_cl, round)
-                avg_running_time += running_time
-
-            avg_running_time /= rounds
-            avg_running_times.append(avg_running_time)
-        to_plt.append((algo_name, avg_running_times))
-
-    plot_multi(to_plt, ks, "number of clusters", "inc_k", y_max=scale_lim)
-    plot_multi_legend(to_plt, ks, "number of clusters", "inc_k", y_max=scale_lim)
-
-
-def run_diff_l():
-    n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    ls = [5, 10, 15]  # , 30, 35, 40, 45, 50]
-
-    print("running experiment: inc_l")
-
-    if not os.path.exists('experiments_data/inc_l/'):
-        os.makedirs('experiments_data/inc_l/')
-
-    if not os.path.exists('plots/'):
-        os.makedirs('plots/')
-
-    to_plt = []
-
-    for algo, algo_name in [(PROCLUS, "PROCLUS"), (FAST_star_PROCLUS, "FAST*-PROCLUS"),
-                            (FAST_PROCLUS, "FAST-PROCLUS"),
-                            (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                            (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS")]:
-        print(algo_name)
-        avg_running_times = []
-        for l in ls:
-            print("l:", l)
-            avg_running_time = 0.
-            for round in range(rounds):
-                print("round:", round)
-                running_time = run(algo, "inc_l", algo_name, n, d, k, l, a, b, min_deviation, termination_rounds, cl,
-                                   std, dims_pr_cl, round)
-                avg_running_time += running_time
-
-            avg_running_time /= rounds
-            avg_running_times.append(avg_running_time)
-        to_plt.append((algo_name, avg_running_times))
-
-    plot_multi(to_plt, ls, "average number of dimensions", "inc_l", y_max=scale_lim)
-    plot_multi_legend(to_plt, ls, "average number of dimensions", "inc_l", y_max=scale_lim)
-
-
-def run_diff_a():
-    n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    As = [10, 20, 50, 100, 200, 300, 400, 500]
-
-    print("running experiment: inc_A")
-
-    if not os.path.exists('experiments_data/inc_A/'):
-        os.makedirs('experiments_data/inc_A/')
-
-    if not os.path.exists('plots/'):
-        os.makedirs('plots/')
-
-    to_plt = []
-
-    for algo, algo_name in [(PROCLUS, "PROCLUS"), (FAST_star_PROCLUS, "FAST*-PROCLUS"),
-                            (FAST_PROCLUS, "FAST-PROCLUS"),
-                            (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                            (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS")]:
-        print(algo_name)
-        avg_running_times = []
-        for a in As:
-            print("A:", a)
-            avg_running_time = 0.
-            for round in range(rounds):
-                print("round:", round)
-                running_time = run(algo, "inc_A", algo_name, n, d, k, l, a, b, min_deviation, termination_rounds, cl,
-                                   std, dims_pr_cl, round)
-                avg_running_time += running_time
-
-            avg_running_time /= rounds
-            avg_running_times.append(avg_running_time)
-        to_plt.append((algo_name, avg_running_times))
-
-    plot_multi(to_plt, As, "constant A", "inc_A", y_max=scale_lim)
-    plot_multi_legend(to_plt, As, "constant A", "inc_A", y_max=scale_lim)
-
-
-def run_diff_b():
-    n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    Bs = [5, 10, 20, 50, 100]
-
-    print("running experiment: inc_B")
-
-    if not os.path.exists('experiments_data/inc_B/'):
-        os.makedirs('experiments_data/inc_B/')
-
-    if not os.path.exists('plots/'):
-        os.makedirs('plots/')
-
-    to_plt = []
-
-    for algo, algo_name in [(PROCLUS, "PROCLUS"), (FAST_star_PROCLUS, "FAST*-PROCLUS"),
-                            (FAST_PROCLUS, "FAST-PROCLUS"),
-                            (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                            (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS")]:
-        print(algo_name)
-        avg_running_times = []
-        for b in Bs:
-            print("B:", b)
-            avg_running_time = 0.
-            for round in range(rounds):
-                print("round:", round)
-                running_time = run(algo, "inc_B", algo_name, n, d, k, l, a, b, min_deviation, termination_rounds, cl,
-                                   std, dims_pr_cl, round)
-                avg_running_time += running_time
-
-            avg_running_time /= rounds
-            avg_running_times.append(avg_running_time)
-        to_plt.append((algo_name, avg_running_times))
-
-    plot_multi(to_plt, Bs, "constant B", "inc_B", y_max=scale_lim)
-    plot_multi_legend(to_plt, Bs, "constant B", "inc_B", y_max=scale_lim)
-
-
-def run_diff_dev():
-    n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    devs = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.]
-
-    print("running experiment: inc_dev")
-
-    if not os.path.exists('experiments_data/inc_dev/'):
-        os.makedirs('experiments_data/inc_dev/')
-
-    if not os.path.exists('plots/'):
-        os.makedirs('plots/')
-
-    to_plt = []
-
-    for algo, algo_name in [(PROCLUS, "PROCLUS"), (FAST_star_PROCLUS, "FAST*-PROCLUS"),
-                            (FAST_PROCLUS, "FAST-PROCLUS"),
-                            (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                            (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS")]:
-        print(algo_name)
-        avg_running_times = []
-        for min_deviation in devs:
-            print("min_deviation:", min_deviation)
-            avg_running_time = 0.
-            for round in range(rounds):
-                print("round:", round)
-                running_time = run(algo, "inc_dev", algo_name, n, d, k, l, a, b, min_deviation, termination_rounds, cl,
-                                   std, dims_pr_cl, round)
-                avg_running_time += running_time
-
-            avg_running_time /= rounds
-            avg_running_times.append(avg_running_time)
-        to_plt.append((algo_name, avg_running_times))
-
-    plot_multi(to_plt, devs, "$min_{deviation}$", "inc_dev", y_max=scale_lim)
-    plot_multi_legend(to_plt, devs, "$min_{deviation}$", "inc_dev", y_max=scale_lim)
-
-
-def run_diff_cl():
-    n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    cls = [5, 10, 15, 20, 25]  # , 30, 35, 40, 45, 50]
-
-    print("running experiment: inc_cl")
-
-    if not os.path.exists('experiments_data/inc_cl/'):
-        os.makedirs('experiments_data/inc_cl/')
-
-    if not os.path.exists('plots/'):
-        os.makedirs('plots/')
-
-    to_plt = []
-
-    for algo, algo_name in [(PROCLUS, "PROCLUS"), (FAST_star_PROCLUS, "FAST*-PROCLUS"),
-                            (FAST_PROCLUS, "FAST-PROCLUS"),
-                            (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                            (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS")]:
-        print(algo_name)
-        avg_running_times = []
-        for cl in cls:
-            print("cl:", cl)
-            avg_running_time = 0.
-            for round in range(rounds):
-                print("round:", round)
-                running_time = run(algo, "inc_cl", algo_name, n, d, k, l, a, b, min_deviation, termination_rounds, cl,
-                                   std, dims_pr_cl, round)
-                avg_running_time += running_time
-
-            avg_running_time /= rounds
-            avg_running_times.append(avg_running_time)
-        to_plt.append((algo_name, avg_running_times))
-
-    plot_multi(to_plt, cls, "number of actual clusters", "inc_cl", y_max=scale_lim)
-    plot_multi_legend(to_plt, cls, "number of actual clusters", "inc_cl", y_max=scale_lim)
-
-
-def run_diff_std():
-    n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
-    stds = [5, 10, 15, 20, 25]  # , 30, 35, 40, 45, 50]
-
-    print("running experiment: inc_std")
-
-    if not os.path.exists('experiments_data/inc_std/'):
-        os.makedirs('experiments_data/inc_std/')
-
-    if not os.path.exists('plots/'):
-        os.makedirs('plots/')
-
-    to_plt = []
-
-    for algo, algo_name in [(PROCLUS, "PROCLUS"), (FAST_star_PROCLUS, "FAST*-PROCLUS"),
-                            (FAST_PROCLUS, "FAST-PROCLUS"),
-                            (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                            (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS")]:
-        print(algo_name)
-        avg_running_times = []
-        for std in stds:
-            print("std:", std)
-            avg_running_time = 0.
-            for round in range(rounds):
-                print("round:", round)
-                running_time = run(algo, "inc_std", algo_name, n, d, k, l, a, b, min_deviation, termination_rounds, cl,
-                                   std, dims_pr_cl, round)
-                avg_running_time += running_time
-
-            avg_running_time /= rounds
-            avg_running_times.append(avg_running_time)
-        to_plt.append((algo_name, avg_running_times))
-
-    plot_multi(to_plt, stds, "standard deviation", "inc_std", y_max=scale_lim)
-    plot_multi_legend(to_plt, stds, "standard deviation", "inc_std", y_max=scale_lim)
-
 
 experiment = sys.argv[1]
 if experiment == "all":
