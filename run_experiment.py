@@ -642,6 +642,10 @@ elif experiment == "inc_std":
 elif experiment == "large":
     run_inc_n_param_large()
     run_inc_d_param_large()
+elif experiment == "large_n":
+    run_inc_n_param_large()
+elif experiment == "large_d":
+    run_inc_d_param_large()
 elif experiment == "param":
     run_inc_n_param()
     run_inc_d_param()
