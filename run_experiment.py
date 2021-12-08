@@ -4,11 +4,17 @@ import sys
 import time
 import matplotlib.pyplot as plt
 
-font_size = 20
 dist_lim = 250
 scale_lim = 1000
-plt.rcParams.update({'font.family': "Times New Roman"})
-plt.rcParams.update({'font.serif': "Times New Roman"})
+figure_size = (1.5*1.75, 1.5*1.4)
+marker_size = 1
+linewidth = 0.5
+font_size = 8
+plt.rcParams.update({'font.family': "Times"})
+plt.rcParams.update({'font.serif': "Times"})
+plt.rcParams.update({'font.size': font_size})
+plt.rcParams.update({'mathtext.default': "sf"})
+plt.rcParams['text.usetex'] = True
 
 label_PROCLUS = "PROCLUS"
 label_FAST_star_PROCLUS = "FAST*-PROCLUS"
@@ -62,15 +68,15 @@ algorithms_2 = [(PROCLUS, label_PROCLUS), (FAST_star_PROCLUS, label_FAST_star_PR
                 (GPU_FAST_PROCLUS_multi_3, label_GPU_FAST_PROCLUS_multi3)]
 
 algorithms_3 = [(GPU_PROCLUS, label_GPU_PROCLUS), (GPU_FAST_star_PROCLUS, label_GPU_FAST_star_PROCLUS),
-                (GPU_FAST_PROCLUS, label_GPU_FAST_PROCLUS), (GPU_FAST_PROCLUS_multi, label_GPU_FAST_PROCLUS_multi1),
-                (GPU_FAST_PROCLUS_multi_2, label_GPU_FAST_PROCLUS_multi2),
-                (GPU_FAST_PROCLUS_multi_3, label_GPU_FAST_PROCLUS_multi3),
-                (PROCLUS, label_PROCLUS), (FAST_star_PROCLUS, label_FAST_star_PROCLUS),
-                (FAST_PROCLUS, label_FAST_PROCLUS), (FAST_PROCLUS_multi, label_FAST_PROCLUS_multi),
-                (PROCLUS_parallel, label_PROCLUS_parallel),
-                (FAST_star_PROCLUS_parallel, label_FAST_star_PROCLUS_parallel),
-                (FAST_PROCLUS_parallel, label_FAST_PROCLUS_parallel),
-                (FAST_PROCLUS_multi_parallel, label_FAST_PROCLUS_multi_parallel)]
+                (GPU_FAST_PROCLUS, label_GPU_FAST_PROCLUS), (GPU_FAST_PROCLUS_multi, label_GPU_FAST_PROCLUS_multi1)]#,
+                #(GPU_FAST_PROCLUS_multi_2, label_GPU_FAST_PROCLUS_multi2),
+                #(GPU_FAST_PROCLUS_multi_3, label_GPU_FAST_PROCLUS_multi3),
+                #(PROCLUS, label_PROCLUS), (FAST_star_PROCLUS, label_FAST_star_PROCLUS),
+                #(FAST_PROCLUS, label_FAST_PROCLUS), (FAST_PROCLUS_multi, label_FAST_PROCLUS_multi),
+                #(PROCLUS_parallel, label_PROCLUS_parallel),
+                #(FAST_star_PROCLUS_parallel, label_FAST_star_PROCLUS_parallel),
+                #(FAST_PROCLUS_parallel, label_FAST_PROCLUS_parallel),
+                #(FAST_PROCLUS_multi_parallel, label_FAST_PROCLUS_multi_parallel)]
 
 
 def get_standard_params():
@@ -221,8 +227,7 @@ def plot(avg_running_times, xs, x_label, experiment, y_max=None, y_label='time i
 def plot_multi(to_plt, xs, x_label, experiment, y_max=None, y_label='time in seconds', y_scale="log"):
     print(xs)
 
-    plt.figure(figsize=(6, 5))
-    plt.rcParams.update({'font.size': font_size})
+    plt.figure(figsize=figure_size)
 
     for algo_name, avg_running_times in to_plt:
         print(algo_name, avg_running_times)
@@ -245,8 +250,8 @@ def plot_multi(to_plt, xs, x_label, experiment, y_max=None, y_label='time in sec
 
 
 def plot_multi_legend(to_plt, xs, x_label, experiment, y_max=None, y_label='time in seconds', y_scale="log"):
-    plt.figure(figsize=(10, 5))
-    plt.rcParams.update({'font.size': font_size})
+    plt.figure(figsize=figure_size)
+
     for algo_name, avg_running_times in to_plt:
         plt.plot(xs[:len(avg_running_times)], avg_running_times, color=style_map[algo_name]["color"],
                  marker=style_map[algo_name]["marker"], linestyle=style_map[algo_name]["linestyle"], label=algo_name)
@@ -268,8 +273,7 @@ def plot_speedup(to_plt, xs, x_label, experiment, y_max=None):
 
     _, base = to_plt[0]
 
-    plt.figure(figsize=(6, 5))
-    plt.rcParams.update({'font.size': font_size})
+    plt.figure(figsize=figure_size)
 
     for algo_name, avg_running_times in to_plt:
         plt.plot(xs[:len(avg_running_times)], np.array(base) / np.array(avg_running_times),
@@ -290,17 +294,16 @@ def plot_speedup(to_plt, xs, x_label, experiment, y_max=None):
 def plot_speedup_legend(to_plt, xs, x_label, experiment, y_max=None):
     _, base = to_plt[0]
 
-    plt.figure(figsize=(6, 5))
-    plt.rcParams.update({'font.size': font_size})
+    plt.figure(figsize=figure_size)
 
     for algo_name, avg_running_times in to_plt:
         plt.plot([], [], color=style_map[algo_name]["color"], marker=style_map[algo_name]["marker"],
                  linestyle=style_map[algo_name]["linestyle"], label=algo_name)
 
-    plt.gcf().subplots_adjust(left=0.14)
-    plt.ylabel('factor of speedup')
-    plt.xlabel(x_label)
-    plt.legend(loc='upper right', bbox_to_anchor=(1., 1.))
+    plt.gcf().subplots_adjust(left=0.5)
+    #plt.ylabel('factor of speedup')
+    #plt.xlabel(x_label)
+    plt.legend(loc='upper center', fontsize=font_size)#bbox_to_anchor=(1., 1.))
     if not y_max is None:
         plt.ylim(0, 8000)
     plt.tight_layout()

@@ -65,28 +65,33 @@ min_deviation = 0.7
 termination_rounds = 5
 
 # do one run just to get the GPU started and get more correct measurements
-labels = ["glass", "vowel", "pendigits", "sky 1x1", "sky 5x5", "sky 10x10"]
+labels = ["glass", "vowel", "pendigits", "sky 1x1", "sky 2x2", "sky 5x5"]
 ra = np.arange(len(labels))
 fig, ax = plt.subplots(figsize=(8, 5))
-width = 1. / 5.
+width = 1. / 7.
 
 PROCLUS_times = []
+FAST_star_PROCLUS_times = []
 FAST_PROCLUS_multi_times = []
 GPU_PROCLUS_times = []
+GPU_FAST_star_PROCLUS_times = []
 GPU_FAST_PROCLUS_multi_times = []
 run(GPU_PROCLUS, load_glass())
 
 for load_data in [load_glass, load_vowel, load_pendigits, load_skyserver_1x1, load_skyserver_5x5, load_skyserver_10x10]:
     PROCLUS_times.append(run(PROCLUS, load_data()))
+    FAST_star_PROCLUS_times.append(run(FAST_star_PROCLUS, load_data()))
     FAST_PROCLUS_multi_times.append(run_param(FAST_PROCLUS_multi, load_data()))
     GPU_PROCLUS_times.append(run(GPU_PROCLUS, load_data()))
+    GPU_FAST_star_PROCLUS_times.append(run(GPU_FAST_star_PROCLUS, load_data()))
     GPU_FAST_PROCLUS_multi_times.append(run_param(GPU_FAST_PROCLUS_multi, load_data()))
 
-
-rects1 = ax.bar(ra - 3 * width / 2, PROCLUS_times, width=width, label="PROCLUS")
+rects1 = ax.bar(ra - 5 * width / 2, PROCLUS_times, width=width, label="PROCLUS")
+rects3 = ax.bar(ra - 3 * width / 2, FAST_star_PROCLUS_times, width=width, label="FAST*-PROCLUS")
 rects3 = ax.bar(ra - width / 2, FAST_PROCLUS_multi_times, width=width, label="FAST-PROCLUS")
 rects4 = ax.bar(ra + width / 2, GPU_PROCLUS_times, width=width, label="GPU-PROCLUS")
-rects6 = ax.bar(ra + 3 * width / 2, GPU_FAST_PROCLUS_multi_times, width=width, label="GPU-FAST-PROCLUS")
+rects6 = ax.bar(ra + 3 * width / 2, GPU_FAST_star_PROCLUS_times, width=width, label="GPU-FAST*-PROCLUS")
+rects6 = ax.bar(ra + 5 * width / 2, GPU_FAST_PROCLUS_multi_times, width=width, label="GPU-FAST-PROCLUS")
 
 ax.set_xticks(ra)
 ax.set_xticklabels(labels)
