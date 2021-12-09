@@ -9,7 +9,7 @@ scale_lim = 1000
 figure_size = (1.5*1.75, 1.5*1.4)
 marker_size = 1
 linewidth = 0.5
-font_size = 8
+font_size = 10#8
 plt.rcParams.update({'font.family': "Times"})
 plt.rcParams.update({'font.serif': "Times"})
 plt.rcParams.update({'font.size': font_size})
@@ -294,16 +294,16 @@ def plot_speedup(to_plt, xs, x_label, experiment, y_max=None):
 def plot_speedup_legend(to_plt, xs, x_label, experiment, y_max=None):
     _, base = to_plt[0]
 
-    plt.figure(figsize=figure_size)
+    #plt.figure(figsize=figure_size)
 
     for algo_name, avg_running_times in to_plt:
         plt.plot([], [], color=style_map[algo_name]["color"], marker=style_map[algo_name]["marker"],
                  linestyle=style_map[algo_name]["linestyle"], label=algo_name)
 
-    plt.gcf().subplots_adjust(left=0.5)
+    #plt.gcf().subplots_adjust(left=0.5)
     #plt.ylabel('factor of speedup')
     #plt.xlabel(x_label)
-    plt.legend(loc='upper center', fontsize=font_size)#bbox_to_anchor=(1., 1.))
+    plt.legend(loc='center', fontsize=font_size)#bbox_to_anchor=(1., 1.))
     if not y_max is None:
         plt.ylim(0, 8000)
     plt.tight_layout()

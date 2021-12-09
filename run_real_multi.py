@@ -86,6 +86,13 @@ for load_data in [load_glass, load_vowel, load_pendigits, load_skyserver_1x1, lo
     GPU_FAST_star_PROCLUS_times.append(run(GPU_FAST_star_PROCLUS, load_data()))
     GPU_FAST_PROCLUS_multi_times.append(run_param(GPU_FAST_PROCLUS_multi, load_data()))
 
+print(PROCLUS_times)
+print(FAST_star_PROCLUS_times)
+print(FAST_PROCLUS_multi_times)
+print(GPU_PROCLUS_times)
+print(GPU_FAST_star_PROCLUS_times)
+print(GPU_FAST_PROCLUS_multi_times)
+
 rects1 = ax.bar(ra - 5 * width / 2, PROCLUS_times, width=width, label="PROCLUS")
 rects3 = ax.bar(ra - 3 * width / 2, FAST_star_PROCLUS_times, width=width, label="FAST*-PROCLUS")
 rects3 = ax.bar(ra - width / 2, FAST_PROCLUS_multi_times, width=width, label="FAST-PROCLUS")
