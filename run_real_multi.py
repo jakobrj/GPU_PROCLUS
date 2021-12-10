@@ -5,6 +5,10 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 
+plt.rcParams.update({'font.family': "Times New Roman"})
+plt.rcParams.update({'font.size': 10})
+figure_size = (1.5 * 3.36, 1.5 * 1.4)
+
 
 def run(method, X):
     print(X.size())
@@ -67,8 +71,10 @@ termination_rounds = 5
 # do one run just to get the GPU started and get more correct measurements
 labels = ["glass", "vowel", "pendigits", "sky 1x1", "sky 2x2", "sky 5x5"]
 ra = np.arange(len(labels))
-fig, ax = plt.subplots(figsize=(8, 5))
+fig, ax = plt.subplots(figsize=figure_size)
 width = 1. / 7.
+
+run_file = "experiments_data/real.npz"
 
 PROCLUS_times = [0.0778673701816135, 0.3760427316029867, 2.395080794228448, 8.587821976343792, 36.916119522518585,
                  261.5996938202116]
@@ -78,8 +84,18 @@ FAST_PROCLUS_multi_times = [0.035419771406385636, 0.16441789468129475, 1.1241288
 GPU_PROCLUS_times = [0.0024620109134250215, 0.002765899234347873, 0.0048781633377075195, 0.007174672020806207,
                      0.013782013787163629, 0.09205211533440484]
 GPU_FAST_star_PROCLUS_times = []
-GPU_FAST_PROCLUS_multi_times = [0.0010533783170912, 0.0009655343161688911, 0.002134320471021864, 0.0031624794006347655,
+GPU_FAST_PROCLUS_multi_times = [0.0010533783170912, 0.0009655343161688911, 0.002134320471021864,
+                                0.0031624794006347655,
                                 0.007363846566942003, 0.040379969278971355]
+if os.path.exists(run_file):
+    data = np.load(run_file, allow_pickle=True)
+    PROCLUS_times = data["PROCLUS_times"]
+    FAST_star_PROCLUS_times = data["FAST_star_PROCLUS_times"]
+    FAST_PROCLUS_multi_times = data["FAST_PROCLUS_multi_times"]
+    GPU_PROCLUS_times = data["GPU_PROCLUS_times"]
+    GPU_FAST_star_PROCLUS_times = data["GPU_FAST_star_PROCLUS_times"]
+    GPU_FAST_PROCLUS_multi_times = data["GPU_FAST_PROCLUS_multi_times"]
+
 run(GPU_PROCLUS, load_glass())
 
 for i, load_data in enumerate([load_glass, load_vowel, load_pendigits,
@@ -91,18 +107,8 @@ for i, load_data in enumerate([load_glass, load_vowel, load_pendigits,
                         (GPU_FAST_PROCLUS_multi_times, GPU_FAST_PROCLUS_multi)]:
         if i >= len(times):
             times.append(run(algo, load_data()))
-        # if i >= len(FAST_star_PROCLUS_times):
-        #     FAST_star_PROCLUS_times.append(run(FAST_star_PROCLUS, load_data()))
-        # if i >= len(FAST_PROCLUS_multi_times):
-        #     FAST_PROCLUS_multi_times.append(run_param(FAST_PROCLUS_multi, load_data()))
-        # if i >= len(GPU_PROCLUS_times):
-        #     GPU_PROCLUS_times.append(run(GPU_PROCLUS, load_data()))
-        # if i >= len(GPU_FAST_star_PROCLUS_times):
-        #     GPU_FAST_star_PROCLUS_times.append(run(GPU_FAST_star_PROCLUS, load_data()))
-        # if i >= len(GPU_FAST_PROCLUS_multi_times):
-        #     GPU_FAST_PROCLUS_multi_times.append(run_param(GPU_FAST_PROCLUS_multi, load_data()))
 
-            np.savez("experiments_data/real.npz",
+            np.savez(run_file,
                      PROCLUS_times=PROCLUS_times,
                      FAST_star_PROCLUS_times=FAST_star_PROCLUS_times,
                      FAST_PROCLUS_multi_times=FAST_PROCLUS_multi_times,
@@ -110,12 +116,12 @@ for i, load_data in enumerate([load_glass, load_vowel, load_pendigits,
                      GPU_FAST_star_PROCLUS_times=GPU_FAST_star_PROCLUS_times,
                      GPU_FAST_PROCLUS_multi_times=GPU_FAST_PROCLUS_multi_times)
 
-        print("PROCLUS", PROCLUS_times)
-        print("FAST*-PROCLUS", FAST_star_PROCLUS_times)
-        print("FAST-PROCLUS", FAST_PROCLUS_multi_times)
-        print("GPU-PROCLUS", GPU_PROCLUS_times)
-        print("GPU-FAST*-PROCLUS", GPU_FAST_star_PROCLUS_times)
-        print("GPU-FAST-PROCLUS", GPU_FAST_PROCLUS_multi_times)
+print("PROCLUS", PROCLUS_times)
+print("FAST*-PROCLUS", FAST_star_PROCLUS_times)
+print("FAST-PROCLUS", FAST_PROCLUS_multi_times)
+print("GPU-PROCLUS", GPU_PROCLUS_times)
+print("GPU-FAST*-PROCLUS", GPU_FAST_star_PROCLUS_times)
+print("GPU-FAST-PROCLUS", GPU_FAST_PROCLUS_multi_times)
 
 rects1 = ax.bar(ra - 5 * width / 2, PROCLUS_times, width=width, label="PROCLUS")
 rects3 = ax.bar(ra - 3 * width / 2, FAST_star_PROCLUS_times, width=width, label="FAST*-PROCLUS")

@@ -106,6 +106,9 @@ algorithms_3 = [(GPU_PROCLUS, label_GPU_PROCLUS), (GPU_FAST_star_PROCLUS, label_
                 (GPU_FAST_PROCLUS, label_GPU_FAST_PROCLUS),
                 (GPU_FAST_PROCLUS_multi, label_GPU_FAST_PROCLUS_multi1)]  # ,
 
+algorithms_GPU = [(GPU_PROCLUS, label_GPU_PROCLUS), (GPU_FAST_star_PROCLUS, label_GPU_FAST_star_PROCLUS),
+                  (GPU_FAST_PROCLUS, label_GPU_FAST_PROCLUS)]
+
 
 # (GPU_FAST_PROCLUS_multi_2, label_GPU_FAST_PROCLUS_multi2),
 # (GPU_FAST_PROCLUS_multi_3, label_GPU_FAST_PROCLUS_multi3),
@@ -306,7 +309,7 @@ def plot_multi_legend(to_plt, xs, x_label, experiment, y_max=None, y_label='time
     plt.clf()
 
 
-def plot_speedup(to_plt, xs, x_label, experiment, y_max=None):
+def plot_speedup(to_plt, xs, x_label, experiment, y_max=10000):
     print(to_plt)
     print(xs)
 
@@ -324,7 +327,7 @@ def plot_speedup(to_plt, xs, x_label, experiment, y_max=None):
     plt.xlabel(x_label)
     plt.grid(True, which="both", ls="-")
     if not y_max is None:
-        plt.ylim(0, 10000)
+        plt.ylim(0, y_max)
     plt.tight_layout()
     plt.savefig("plots/" + experiment + "_speedup.pdf")
     plt.clf()
@@ -404,7 +407,7 @@ def run_rounds(experiment_name, algo, algo_name, f_run, n_=None, d_=None, k_=Non
 
 
 def run_experiment(experiment_name, algorithms, iterator, xs, x_label="number of points", y_label="time in seconds",
-                   y_scale="log", y_max=scale_lim, speedup=True):
+                   y_scale="log", y_max=scale_lim, speedup=True, name_extension="", speedup_y_max=10000):
     n, d, k, l, a, b, min_deviation, termination_rounds, cl, std, dims_pr_cl, rounds = get_standard_params()
 
     print("running experiment:", experiment_name)
@@ -420,10 +423,10 @@ def run_experiment(experiment_name, algorithms, iterator, xs, x_label="number of
         print(algo_name)
         to_plt.append((algo_name, iterator(experiment_name, algo, algo_name)))
 
-    plot_multi(to_plt, xs, x_label, experiment_name, y_max=y_max, y_label=y_label, y_scale=y_scale)
+    plot_multi(to_plt, xs, x_label, experiment_name + "_" + name_extension, y_max=y_max, y_label=y_label, y_scale=y_scale)
     # plot_multi_legend(to_plt, xs, x_label, experiment_name, y_max=y_max, y_label=y_label, y_scale=y_scale)
     if speedup:
-        plot_speedup(to_plt, xs, x_label, experiment_name, y_max=y_max)
+        plot_speedup(to_plt, xs, x_label, experiment_name + "_" + name_extension, y_max=speedup_y_max)
         # plot_speedup_legend(to_plt, xs, x_label, experiment_name, y_max=y_max)
 
 
@@ -442,6 +445,24 @@ def run_inc_n():
         return list(reversed(avgs))
 
     run_experiment(experiment_name, algorithms, iterator, ns, x_label="number of points", y_label="time in seconds")
+
+
+def run_inc_n_GPU():
+    experiment_name = "inc_n"
+
+    algorithms = algorithms_GPU
+
+    ns = [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000]
+
+    def iterator(experiment_name, algo, algo_name):
+        avgs = []
+        for n in reversed(ns):
+            print("n:", n)
+            avgs.append(run_rounds(experiment_name, algo, algo_name, run, n_=n))
+        return list(reversed(avgs))
+
+    run_experiment(experiment_name, algorithms, iterator, ns, x_label="number of points", y_label="time in seconds",
+                   name_extension="gpu", speedup_y_max=2)
 
 
 def run_inc_n_param():
@@ -737,5 +758,7 @@ elif experiment == "param_legend":
     get_legend("param", algorithms_2, (3.4, 3.3))
 elif experiment == "large_legend":
     get_legend("large", algorithms_3, (3.4, 3.3))
+elif experiment == "inc_n_gpu":
+    run_inc_n_GPU()
 
 # real world
