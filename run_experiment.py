@@ -6,46 +6,81 @@ import matplotlib.pyplot as plt
 
 dist_lim = 250
 scale_lim = 1000
-figure_size = (1.5*1.75, 1.5*1.4)
+figure_size = (1.5 * 1.75, 1.5 * 1.4)
 marker_size = 1
 linewidth = 0.5
-font_size = 10#8
-plt.rcParams.update({'font.family': "Times"})
-plt.rcParams.update({'font.serif': "Times"})
+font_size = 10  # 8
+plt.rcParams.update({'font.family': "Times New Roman"})
+plt.rcParams.update({'font.serif': "Times New Roman"})
 plt.rcParams.update({'font.size': font_size})
 plt.rcParams.update({'mathtext.default': "sf"})
 plt.rcParams['text.usetex'] = True
 
 label_PROCLUS = "PROCLUS"
-label_FAST_star_PROCLUS = "FAST*-PROCLUS"
+label_FAST_star_PROCLUS = "FAST_-PROCLUS"
 label_FAST_PROCLUS = "FAST-PROCLUS"
 label_FAST_PROCLUS_multi = "FAST-PROCLUS(multi-param)"
 label_PROCLUS_parallel = "PROCLUS(multi-core)"
-label_FAST_star_PROCLUS_parallel = "FAST*-PROCLUS(multi-core)"
+label_FAST_star_PROCLUS_parallel = "FAST_-PROCLUS(multi-core)"
 label_FAST_PROCLUS_parallel = "FAST-PROCLUS(multi-core)"
 label_FAST_PROCLUS_multi_parallel = "FAST-PROCLUS(multi-param,multi-core)"
 label_GPU_PROCLUS = "GPU-PROCLUS"
-label_GPU_FAST_star_PROCLUS = "GPU-FAST*-PROCLUS"
+label_GPU_FAST_star_PROCLUS = "GPU-FAST_-PROCLUS"
 label_GPU_FAST_PROCLUS = "GPU-FAST-PROCLUS"
 label_GPU_FAST_PROCLUS_multi1 = "GPU-FAST-PROCLUS(multi-param1)"
 label_GPU_FAST_PROCLUS_multi2 = "GPU-FAST-PROCLUS(multi-param2)"
 label_GPU_FAST_PROCLUS_multi3 = "GPU-FAST-PROCLUS(multi-param3)"
 
+style_map_old = {
+    label_PROCLUS: {"color": "#A12C23", "marker": "x", "linestyle": "dashed", "legend": "PROCLUS"},
+    label_FAST_star_PROCLUS: {"color": "#00554D", "marker": "*", "linestyle": "dashed", "legend": "FAST*-PROCLUS"},
+    label_FAST_PROCLUS: {"color": "#0281BB", "marker": "1", "linestyle": "dashed", "legend": "FAST-PROCLUS"},
+    label_FAST_PROCLUS_multi: {"color": "#0281BB", "marker": "2", "linestyle": "dashed",
+                               "legend": "FAST-PROCLUS (multi-param)"},
+    label_PROCLUS_parallel: {"color": "#A12C23", "marker": "x", "linestyle": "dotted",
+                             "legend": "PROCLUS (multi-core)"},
+    label_FAST_star_PROCLUS_parallel: {"color": "#00554D", "marker": "*", "linestyle": "dotted",
+                                       "legend": "FAST*-PROCLUS (multi-core)"},
+    label_FAST_PROCLUS_parallel: {"color": "#0281BB", "marker": "1", "linestyle": "dotted",
+                                  "legend": "FAST-PROCLUS (multi-core)"},
+    label_FAST_PROCLUS_multi_parallel: {"color": "#0281BB", "marker": "2", "linestyle": "dotted",
+                                        "legend": "FAST-PROCLUS (multi-param, multi-core)"},
+    label_GPU_PROCLUS: {"color": "#74A23D", "marker": "x", "linestyle": "solid", "legend": "GPU-PROCLUS"},
+    label_GPU_FAST_star_PROCLUS: {"color": "#8BB3FF", "marker": "*", "linestyle": "solid",
+                                  "legend": "GPU-FAST*-PROCLUS"},
+    label_GPU_FAST_PROCLUS: {"color": "#F19000", "marker": "1", "linestyle": "solid", "legend": "GPU-FAST-PROCLUS"},
+    label_GPU_FAST_PROCLUS_multi1: {"color": "#F19000", "marker": "2", "linestyle": "solid",
+                                    "legend": "GPU-FAST-PROCLUS (multi-param 1)"},
+    label_GPU_FAST_PROCLUS_multi2: {"color": "#F19000", "marker": "3", "linestyle": "solid",
+                                    "legend": "GPU-FAST-PROCLUS (multi-param 2)"},
+    label_GPU_FAST_PROCLUS_multi3: {"color": "#F19000", "marker": "4", "linestyle": "solid",
+                                    "legend": "GPU-FAST-PROCLUS (multi-param 3)"},
+}
+
 style_map = {
-    label_PROCLUS: {"color": "#A12C23", "marker": "x", "linestyle": "dashed"},
-    label_FAST_star_PROCLUS: {"color": "#00554D", "marker": "*", "linestyle": "dashed"},
-    label_FAST_PROCLUS: {"color": "#0281BB", "marker": "1", "linestyle": "dashed"},
-    label_FAST_PROCLUS_multi: {"color": "#0281BB", "marker": "2", "linestyle": "dashed"},
-    label_PROCLUS_parallel: {"color": "#A12C23", "marker": "x", "linestyle": "dotted"},
-    label_FAST_star_PROCLUS_parallel: {"color": "#00554D", "marker": "*", "linestyle": "dotted"},
-    label_FAST_PROCLUS_parallel: {"color": "#0281BB", "marker": "1", "linestyle": "dotted"},
-    label_FAST_PROCLUS_multi_parallel: {"color": "#0281BB", "marker": "2", "linestyle": "dotted"},
-    label_GPU_PROCLUS: {"color": "#74A23D", "marker": "x", "linestyle": "solid"},
-    label_GPU_FAST_star_PROCLUS: {"color": "#8BB3FF", "marker": "*", "linestyle": "solid"},
-    label_GPU_FAST_PROCLUS: {"color": "#F19000", "marker": "1", "linestyle": "solid"},
-    label_GPU_FAST_PROCLUS_multi1: {"color": "#F19000", "marker": "2", "linestyle": "solid"},
-    label_GPU_FAST_PROCLUS_multi2: {"color": "#F19000", "marker": "3", "linestyle": "solid"},
-    label_GPU_FAST_PROCLUS_multi3: {"color": "#F19000", "marker": "4", "linestyle": "solid"},
+    label_PROCLUS: {"color": "#e31a1c", "marker": "x", "linestyle": "dashed", "legend": "PROCLUS"},
+    label_FAST_star_PROCLUS: {"color": "#ff7f00", "marker": "*", "linestyle": "dashed", "legend": "FAST*-PROCLUS"},
+    label_FAST_PROCLUS: {"color": "#1f78b4", "marker": "1", "linestyle": "dashed", "legend": "FAST-PROCLUS"},
+    label_FAST_PROCLUS_multi: {"color": "#33a02c", "marker": "2", "linestyle": "dashed",
+                               "legend": "FAST-PROCLUS (multi-param)"},
+    label_PROCLUS_parallel: {"color": "#e31a1c", "marker": "x", "linestyle": "dotted",
+                             "legend": "PROCLUS (multi-core)"},
+    label_FAST_star_PROCLUS_parallel: {"color": "#ff7f00", "marker": "*", "linestyle": "dotted",
+                                       "legend": "FAST*-PROCLUS (multi-core)"},
+    label_FAST_PROCLUS_parallel: {"color": "#1f78b4", "marker": "1", "linestyle": "dotted",
+                                  "legend": "FAST-PROCLUS (multi-core)"},
+    label_FAST_PROCLUS_multi_parallel: {"color": "#33a02c", "marker": "2", "linestyle": "dotted",
+                                        "legend": "FAST-PROCLUS (multi-param, multi-core)"},
+    label_GPU_PROCLUS: {"color": "#fb9a99", "marker": "x", "linestyle": "solid", "legend": "GPU-PROCLUS"},
+    label_GPU_FAST_star_PROCLUS: {"color": "#fdbf6f", "marker": "*", "linestyle": "solid",
+                                  "legend": "GPU-FAST*-PROCLUS"},
+    label_GPU_FAST_PROCLUS: {"color": "#a6cee3", "marker": "1", "linestyle": "solid", "legend": "GPU-FAST-PROCLUS"},
+    label_GPU_FAST_PROCLUS_multi1: {"color": "#b2df8a", "marker": "2", "linestyle": "solid",
+                                    "legend": "GPU-FAST-PROCLUS (multi-param 1)"},
+    label_GPU_FAST_PROCLUS_multi2: {"color": "#6a3d9a", "marker": "3", "linestyle": "solid",
+                                    "legend": "GPU-FAST-PROCLUS (multi-param 2)"},
+    label_GPU_FAST_PROCLUS_multi3: {"color": "#cab2d6", "marker": "4", "linestyle": "solid",
+                                    "legend": "GPU-FAST-PROCLUS (multi-param 3)"},
 }
 
 algorithms_1 = [(PROCLUS, label_PROCLUS), (FAST_star_PROCLUS, label_FAST_star_PROCLUS),
@@ -68,15 +103,18 @@ algorithms_2 = [(PROCLUS, label_PROCLUS), (FAST_star_PROCLUS, label_FAST_star_PR
                 (GPU_FAST_PROCLUS_multi_3, label_GPU_FAST_PROCLUS_multi3)]
 
 algorithms_3 = [(GPU_PROCLUS, label_GPU_PROCLUS), (GPU_FAST_star_PROCLUS, label_GPU_FAST_star_PROCLUS),
-                (GPU_FAST_PROCLUS, label_GPU_FAST_PROCLUS), (GPU_FAST_PROCLUS_multi, label_GPU_FAST_PROCLUS_multi1)]#,
-                #(GPU_FAST_PROCLUS_multi_2, label_GPU_FAST_PROCLUS_multi2),
-                #(GPU_FAST_PROCLUS_multi_3, label_GPU_FAST_PROCLUS_multi3),
-                #(PROCLUS, label_PROCLUS), (FAST_star_PROCLUS, label_FAST_star_PROCLUS),
-                #(FAST_PROCLUS, label_FAST_PROCLUS), (FAST_PROCLUS_multi, label_FAST_PROCLUS_multi),
-                #(PROCLUS_parallel, label_PROCLUS_parallel),
-                #(FAST_star_PROCLUS_parallel, label_FAST_star_PROCLUS_parallel),
-                #(FAST_PROCLUS_parallel, label_FAST_PROCLUS_parallel),
-                #(FAST_PROCLUS_multi_parallel, label_FAST_PROCLUS_multi_parallel)]
+                (GPU_FAST_PROCLUS, label_GPU_FAST_PROCLUS),
+                (GPU_FAST_PROCLUS_multi, label_GPU_FAST_PROCLUS_multi1)]  # ,
+
+
+# (GPU_FAST_PROCLUS_multi_2, label_GPU_FAST_PROCLUS_multi2),
+# (GPU_FAST_PROCLUS_multi_3, label_GPU_FAST_PROCLUS_multi3),
+# (PROCLUS, label_PROCLUS), (FAST_star_PROCLUS, label_FAST_star_PROCLUS),
+# (FAST_PROCLUS, label_FAST_PROCLUS), (FAST_PROCLUS_multi, label_FAST_PROCLUS_multi),
+# (PROCLUS_parallel, label_PROCLUS_parallel),
+# (FAST_star_PROCLUS_parallel, label_FAST_star_PROCLUS_parallel),
+# (FAST_PROCLUS_parallel, label_FAST_PROCLUS_parallel),
+# (FAST_PROCLUS_multi_parallel, label_FAST_PROCLUS_multi_parallel)]
 
 
 def get_standard_params():
@@ -235,7 +273,7 @@ def plot_multi(to_plt, xs, x_label, experiment, y_max=None, y_label='time in sec
     for algo_name, avg_running_times in to_plt:
         plt.plot(xs[:len(avg_running_times)], avg_running_times, color=style_map[algo_name]["color"],
                  marker=style_map[algo_name]["marker"],
-                 linestyle=style_map[algo_name]["linestyle"], label=algo_name)
+                 linestyle=style_map[algo_name]["linestyle"], label=style_map[algo_name]["legend"], linewidth=1)
 
     plt.gcf().subplots_adjust(left=0.14)
     plt.ylabel(y_label)
@@ -254,7 +292,8 @@ def plot_multi_legend(to_plt, xs, x_label, experiment, y_max=None, y_label='time
 
     for algo_name, avg_running_times in to_plt:
         plt.plot(xs[:len(avg_running_times)], avg_running_times, color=style_map[algo_name]["color"],
-                 marker=style_map[algo_name]["marker"], linestyle=style_map[algo_name]["linestyle"], label=algo_name)
+                 marker=style_map[algo_name]["marker"], linestyle=style_map[algo_name]["linestyle"],
+                 label=style_map[algo_name]["legend"], linewidth=1)
     plt.gcf().subplots_adjust(left=0.14)
     plt.ylabel(y_label)
     plt.xlabel(x_label)
@@ -278,14 +317,14 @@ def plot_speedup(to_plt, xs, x_label, experiment, y_max=None):
     for algo_name, avg_running_times in to_plt:
         plt.plot(xs[:len(avg_running_times)], np.array(base) / np.array(avg_running_times),
                  color=style_map[algo_name]["color"], marker=style_map[algo_name]["marker"],
-                 linestyle=style_map[algo_name]["linestyle"], label=algo_name)
+                 linestyle=style_map[algo_name]["linestyle"], label=style_map[algo_name]["legend"], linewidth=1)
 
     plt.gcf().subplots_adjust(left=0.14)
     plt.ylabel('factor of speedup')
     plt.xlabel(x_label)
     plt.grid(True, which="both", ls="-")
     if not y_max is None:
-        plt.ylim(0, 6000)
+        plt.ylim(0, 10000)
     plt.tight_layout()
     plt.savefig("plots/" + experiment + "_speedup.pdf")
     plt.clf()
@@ -294,21 +333,37 @@ def plot_speedup(to_plt, xs, x_label, experiment, y_max=None):
 def plot_speedup_legend(to_plt, xs, x_label, experiment, y_max=None):
     _, base = to_plt[0]
 
-    #plt.figure(figsize=figure_size)
+    # plt.figure(figsize=figure_size)
 
     for algo_name, avg_running_times in to_plt:
         plt.plot([], [], color=style_map[algo_name]["color"], marker=style_map[algo_name]["marker"],
-                 linestyle=style_map[algo_name]["linestyle"], label=algo_name)
+                 linestyle=style_map[algo_name]["linestyle"], label=style_map[algo_name]["legend"], linewidth=1)
 
-    #plt.gcf().subplots_adjust(left=0.5)
-    #plt.ylabel('factor of speedup')
-    #plt.xlabel(x_label)
-    plt.legend(loc='center', fontsize=font_size)#bbox_to_anchor=(1., 1.))
+    # plt.gcf().subplots_adjust(left=0.5)
+    # plt.ylabel('factor of speedup')
+    # plt.xlabel(x_label)
+    plt.legend(loc='center', fontsize=font_size)  # bbox_to_anchor=(1., 1.))
     if not y_max is None:
         plt.ylim(0, 8000)
     plt.tight_layout()
     plt.gca().set_axis_off()
     plt.savefig("plots/" + experiment + "_speedup_legend.pdf")
+    plt.clf()
+
+
+def get_legend(name, algorithms, figsize):
+    if not os.path.exists('plots/'):
+        os.makedirs('plots/')
+
+    plt.figure(figsize=figsize)
+    for _, algo_name in algorithms:
+        plt.plot([], [], color=style_map[algo_name]["color"], marker=style_map[algo_name]["marker"],
+                 linestyle=style_map[algo_name]["linestyle"], label=style_map[algo_name]["legend"], linewidth=1)
+
+    plt.legend(loc='center right', fontsize=font_size)
+    plt.tight_layout()
+    plt.gca().set_axis_off()
+    plt.savefig("plots/" + name + "_legend.pdf")
     plt.clf()
 
 
@@ -366,10 +421,10 @@ def run_experiment(experiment_name, algorithms, iterator, xs, x_label="number of
         to_plt.append((algo_name, iterator(experiment_name, algo, algo_name)))
 
     plot_multi(to_plt, xs, x_label, experiment_name, y_max=y_max, y_label=y_label, y_scale=y_scale)
-    plot_multi_legend(to_plt, xs, x_label, experiment_name, y_max=y_max, y_label=y_label, y_scale=y_scale)
+    # plot_multi_legend(to_plt, xs, x_label, experiment_name, y_max=y_max, y_label=y_label, y_scale=y_scale)
     if speedup:
         plot_speedup(to_plt, xs, x_label, experiment_name, y_max=y_max)
-        plot_speedup_legend(to_plt, xs, x_label, experiment_name, y_max=y_max)
+        # plot_speedup_legend(to_plt, xs, x_label, experiment_name, y_max=y_max)
 
 
 def run_inc_n():
@@ -386,7 +441,7 @@ def run_inc_n():
             avgs.append(run_rounds(experiment_name, algo, algo_name, run, n_=n))
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms,  iterator, ns, x_label="number of points", y_label="time in seconds")
+    run_experiment(experiment_name, algorithms, iterator, ns, x_label="number of points", y_label="time in seconds")
 
 
 def run_inc_n_param():
@@ -400,10 +455,11 @@ def run_inc_n_param():
         avgs = []
         for n in reversed(ns):
             print("n:", n)
-            avgs.append(run_rounds(experiment_name, algo, algo_name, run_param, n_=n))
+            avgs.append(run_rounds(experiment_name, algo, algo_name, run_param, n_=n) / 9)
         return list(reversed(avgs))
 
     run_experiment(experiment_name, algorithms, iterator, ns, x_label="number of points", y_label="time in seconds")
+
 
 def run_inc_n_param_large():
     experiment_name = "inc_n_param_large"
@@ -416,10 +472,11 @@ def run_inc_n_param_large():
         avgs = []
         for n in reversed(ns):
             print("n:", n)
-            avgs.append(run_rounds(experiment_name, algo, algo_name, run_param, n_=n))
+            avgs.append(run_rounds(experiment_name, algo, algo_name, run_param, n_=n) / 9)
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms, iterator, ns, x_label="number of points", y_label="time in seconds")
+    run_experiment(experiment_name, algorithms, iterator, ns, x_label="number of points", y_label="time in seconds",
+                   speedup=False)
 
 
 def run_inc_d():
@@ -450,10 +507,11 @@ def run_inc_d_param():
         avgs = []
         for d in reversed(ds):
             print("d:", d)
-            avgs.append(run_rounds(experiment_name, algo, algo_name, run_param, d_=d))
+            avgs.append(run_rounds(experiment_name, algo, algo_name, run_param, d_=d) / 9)
         return list(reversed(avgs))
 
     run_experiment(experiment_name, algorithms, iterator, ds, x_label="number of dimensions", y_label="time in seconds")
+
 
 def run_inc_d_param_large():
     experiment_name = "inc_d_param_large"
@@ -466,10 +524,11 @@ def run_inc_d_param_large():
         avgs = []
         for d in reversed(ds):
             print("d:", d)
-            avgs.append(run_rounds(experiment_name, algo, algo_name, run_param, d_=d))
+            avgs.append(run_rounds(experiment_name, algo, algo_name, run_param, d_=d) / 9)
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms, iterator, ds, x_label="number of dimensions", y_label="time in seconds")
+    run_experiment(experiment_name, algorithms, iterator, ds, x_label="number of dimensions", y_label="time in seconds",
+                   speedup=False)
 
 
 def run_inc_k():
@@ -486,7 +545,8 @@ def run_inc_k():
             avgs.append(run_rounds(experiment_name, algo, algo_name, run, k_=k))
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms, iterator,ks, x_label="number of clusters", y_label="time in seconds")
+    run_experiment(experiment_name, algorithms, iterator, ks, x_label="number of clusters", y_label="time in seconds",
+                   speedup=False)
 
 
 def run_inc_l():
@@ -504,7 +564,7 @@ def run_inc_l():
         return list(reversed(avgs))
 
     run_experiment(experiment_name, algorithms, iterator, ls, x_label="average number of dimensions",
-                   y_label="time in seconds")
+                   y_label="time in seconds", speedup=False)
 
 
 def run_inc_a():
@@ -521,7 +581,8 @@ def run_inc_a():
             avgs.append(run_rounds(experiment_name, algo, algo_name, run, a_=A))
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms, iterator, As, x_label="constant A", y_label="time in seconds")
+    run_experiment(experiment_name, algorithms, iterator, As, x_label="constant A", y_label="time in seconds",
+                   speedup=False)
 
 
 def run_inc_b():
@@ -538,7 +599,8 @@ def run_inc_b():
             avgs.append(run_rounds(experiment_name, algo, algo_name, run, b_=B))
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms, iterator, Bs, x_label="constant B", y_label="time in seconds")
+    run_experiment(experiment_name, algorithms, iterator, Bs, x_label="constant B", y_label="time in seconds",
+                   speedup=False)
 
 
 def run_inc_dev():
@@ -555,15 +617,14 @@ def run_inc_dev():
             avgs.append(run_rounds(experiment_name, algo, algo_name, run, min_deviation_=dev))
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms, iterator, devs, x_label="$min_{deviation}$", y_label="time in seconds")
+    run_experiment(experiment_name, algorithms, iterator, devs, x_label="$min_{deviation}$", y_label="time in seconds",
+                   speedup=False)
 
 
 def run_inc_cl():
     experiment_name = "inc_cl"
 
-    algorithms = [(PROCLUS, "PROCLUS"), (FAST_star_PROCLUS, "FAST*-PROCLUS"), (FAST_PROCLUS, "FAST-PROCLUS"),
-                  (GPU_PROCLUS, "GPU-PROCLUS"), (GPU_FAST_star_PROCLUS, "GPU-FAST*-PROCLUS"),
-                  (GPU_FAST_PROCLUS, "GPU-FAST-PROCLUS")]
+    algorithms = algorithms_1
 
     cls = [5, 10, 15, 20, 25]
 
@@ -575,7 +636,7 @@ def run_inc_cl():
         return list(reversed(avgs))
 
     run_experiment(experiment_name, algorithms, iterator, cls, x_label="number of actual clusters",
-                   y_label="time in seconds")
+                   y_label="time in seconds", speedup=False)
 
 
 def run_inc_std():
@@ -592,7 +653,8 @@ def run_inc_std():
             avgs.append(run_rounds(experiment_name, algo, algo_name, run, std_=std))
         return list(reversed(avgs))
 
-    run_experiment(experiment_name, algorithms, iterator, stds, x_label="standard deviation", y_label="time in seconds")
+    run_experiment(experiment_name, algorithms, iterator, stds, x_label="standard deviation", y_label="time in seconds",
+                   speedup=False)
 
 
 def run_space_n():
@@ -613,6 +675,7 @@ def run_space_n():
     run_experiment(experiment_name, algorithms, iterator, ns, x_label="number of points", y_label="memory in MB",
                    y_scale="linear", y_max=600, speedup=False)
 
+
 experiment = sys.argv[1]
 if experiment == "all":
     run_inc_n()
@@ -622,11 +685,28 @@ if experiment == "all":
     run_inc_a()
     run_inc_b()
     run_inc_dev()
-    run_inc_cl()
+    # run_inc_cl()
     run_inc_std()
     run_space_n()
     run_inc_n_param()
     run_inc_d_param()
+elif experiment == "ALL":
+    run_inc_n()
+    run_inc_d()
+    run_inc_k()
+    run_inc_l()
+    run_inc_a()
+    run_inc_b()
+    run_inc_dev()
+    # run_inc_cl()
+    run_inc_std()
+    run_space_n()
+    run_inc_n_param()
+    run_inc_d_param()
+    run_inc_n_param_large()
+    run_inc_d_param_large()
+    get_legend("standard", algorithms_1, (2.7, 2.3))
+    get_legend("param", algorithms_2, (3.4, 3.3))
 elif experiment == "inc_n":
     run_inc_n()
 elif experiment == "inc_d":
@@ -651,5 +731,11 @@ elif experiment == "param":
     run_inc_d_param()
 elif experiment == "space_n":
     run_space_n()
+elif experiment == "legend":
+    get_legend("standard", algorithms_1, (2.7, 2.3))
+elif experiment == "param_legend":
+    get_legend("param", algorithms_2, (3.4, 3.3))
+elif experiment == "large_legend":
+    get_legend("large", algorithms_3, (3.4, 3.3))
 
 # real world
