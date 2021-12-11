@@ -423,10 +423,10 @@ def run_experiment(experiment_name, algorithms, iterator, xs, x_label="number of
         print(algo_name)
         to_plt.append((algo_name, iterator(experiment_name, algo, algo_name)))
 
-    plot_multi(to_plt, xs, x_label, experiment_name + "_" + name_extension, y_max=y_max, y_label=y_label, y_scale=y_scale)
+    plot_multi(to_plt, xs, x_label, experiment_name + name_extension, y_max=y_max, y_label=y_label, y_scale=y_scale)
     # plot_multi_legend(to_plt, xs, x_label, experiment_name, y_max=y_max, y_label=y_label, y_scale=y_scale)
     if speedup:
-        plot_speedup(to_plt, xs, x_label, experiment_name + "_" + name_extension, y_max=speedup_y_max)
+        plot_speedup(to_plt, xs, x_label, experiment_name + name_extension, y_max=speedup_y_max)
         # plot_speedup_legend(to_plt, xs, x_label, experiment_name, y_max=y_max)
 
 
@@ -462,7 +462,7 @@ def run_inc_n_GPU():
         return list(reversed(avgs))
 
     run_experiment(experiment_name, algorithms, iterator, ns, x_label="number of points", y_label="time in seconds",
-                   name_extension="gpu", speedup_y_max=2)
+                   name_extension="_gpu", speedup_y_max=2)
 
 
 def run_inc_n_param():
