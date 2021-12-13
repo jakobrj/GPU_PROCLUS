@@ -1683,13 +1683,14 @@ void gpu_compute_L_kernel_sqrt_dist_pre_mark(int *d_M_idx, float *d_dist_n_Bk, b
 
 __global__
 void gpu_compute_L_kernel_compute_delta_pre(int *d_M_idx, int *d_M, float *d_delta, float *d_dist, int k, int n) {
-    for (int i = threadIdx.x; i < k; i += blockDim.x) {//independent
+    for (int i = blockIdx.x; i < k; i += gridDim.x) {//independent
         d_delta[i] = 1000000.;//todo not nice
-        for (int p = 0; p < k; p++) {
+        for (int p = threadIdx.x; p < k; p+=blockDim.x) {
             if (i != p) {
-                if (d_dist[d_M_idx[i] * n + d_M[d_M_idx[p]]] < d_delta[i]) {//todo be carefull here
-                    d_delta[i] = d_dist[d_M_idx[i] * n + d_M[d_M_idx[p]]];
-                }
+//                if (d_dist[d_M_idx[i] * n + d_M[d_M_idx[p]]] < d_delta[i]) {//todo be carefull here
+//                    d_delta[i] = d_dist[d_M_idx[i] * n + d_M[d_M_idx[p]]];
+//                }
+                atomicMin(&d_delta[i], d_dist[d_M_idx[i] * n + d_M[d_M_idx[p]]]);
             }
         }
     }
@@ -1758,7 +1759,7 @@ void gpu_compute_L_save(int *d_L, int *d_L_sizes_change, int *d_L_sizes, int *d_
     gpuErrchk(cudaPeekAtLastError());
 
     //compute delta
-    gpu_compute_L_kernel_compute_delta_pre << < 1, k >> > (d_M_idx, d_M, d_delta, d_dist_n_Bk, k, n);
+    gpu_compute_L_kernel_compute_delta_pre << < k, k >> > (d_M_idx, d_M, d_delta, d_dist_n_Bk, k, n);
     gpuErrchk(cudaPeekAtLastError());
 
     //compute L
