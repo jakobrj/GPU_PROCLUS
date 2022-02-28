@@ -12,11 +12,11 @@ X = load_iris()[:, :4]
 # X = load_synt(20, 10000, 20, 0)
 
 
-n = 8_000  # X.shape[0]  # 100_000
-d = 10  # X.shape[1]
+n = 1_000_000 # X.shape[0]  # 100_000
+d = 8  # X.shape[1]
 cl = 10
 std = 5
-dims_pr_cl = 5
+dims_pr_cl = 6
 
 k = cl
 l = dims_pr_cl
@@ -31,7 +31,7 @@ print("before generation")
 X = load_synt_gauss(n=n, d=d, cl=cl, re=0, cl_d=dims_pr_cl, std=std)
 print("after generation")
 
-np.savetxt("X10_000.csv", X, delimiter=",")
+np.savetxt("X1_000_000_D8_k10_l6.csv", X, delimiter=",")
 
 torch.cuda.synchronize()
 
